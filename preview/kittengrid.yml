@@ -1,0 +1,19 @@
+services:
+  - name: service-a
+    cmd: python3
+    port: 10000
+    healthcheck:
+      path: /
+    args:
+      - -m
+      - http.server
+      - 10000
+  - name: service-b
+    cmd: python3
+    port: 10001
+    healthcheck:
+      path: /
+    args:
+      - -m
+      - http.server
+      - 10001

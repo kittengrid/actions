@@ -1,0 +1,67 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test-typescript:
+    name: TypeScript Tests
+    strategy:
+      matrix:
+        action:
+          - preview
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./${{ matrix.action}}
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (${{ matrix.action }})
+        id: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ${{ matrix.action }}/.node-version
+          cache: npm
+          cache-dependency-path: ${{ matrix.action }}
+
+      - name: Install Dependencies (${{ matrix.action }})
+        id: install
+        run: npm ci
+
+      - name: Check Format (${{ matrix.action }})
+        id: npm-format-check
+        run: npm run format:check
+
+      - name: Lint (${{ matrix.action }})
+        id: npm-lint
+        run: npm run lint
+
+      - name: Test (${{ matrix.action }})
+        id: npm-ci-test
+        run: npm run ci-test
+
+  test-action:
+    name: GitHub Actions Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Test Local Action (Preview)
+        id: test-action
+        uses: ./preview
+        with:
+          milliseconds: 2000

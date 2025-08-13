@@ -1,2 +1,3 @@
 # actions
-Github Actions for the Kittengrid project
+
+GitHub Actions for the Kittengrid project
