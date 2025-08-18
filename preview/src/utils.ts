@@ -1,7 +1,11 @@
-import fetch from "node-fetch";
-import { basename } from "path";
-import * as tar from "tar";
-const AGENT_VERSION = "0.0.8";
+import { HttpClient } from '@actions/http-client'
+import { promises as fs } from 'fs'
+import { platform } from '@actions/core'
+import { basename } from 'path'
+import * as path from 'path'
+import * as os from 'os'
+import * as tar from 'tar'
+export const AGENT_VERSION = '0.0.8'
 
 /**
  * Downloads a .tar.gz from a given URL and extracts its single file.
@@ -11,35 +15,47 @@ const AGENT_VERSION = "0.0.8";
  * @param outputDir - Directory where the extracted file should go
  * @returns Promise<string> - Resolves with the extracted file path
  */
-export async function downloadAndExtract(url: string, outputDir: string = "."): Promise<string> {
-  const response = await fetch(url);
+export async function downloadAndExtract(
+  url: string,
+  outputDir: string = '.'
+): Promise<string> {
+  const client = new HttpClient('kittengrid-action')
+  const response = await client.get(url)
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+  if (response.message.statusCode !== 200) {
+    // Properly close the response stream to prevent hanging handles
+    response.message.destroy()
+    throw new Error(
+      `Failed to fetch ${url}: ${response.message.statusCode} ${response.message.statusMessage}`
+    )
   }
-
 
   // Extract directly from the response stream
   return new Promise((resolve, reject) => {
-    let extractedFilePath = "";
+    let extractedFilePath = ''
 
-    if (!response.body || response.body === null) {
-      throw new Error(`No response body received from ${url}`);
+    if (!response.message || !response.message.readable) {
+      response.message?.destroy()
+      reject(new Error(`No response body received from ${url}`))
+      return
     }
 
-    response.body
+    response.message
       .pipe(
         tar.x({
-          cwd: outputDir,      // where to extract
+          cwd: outputDir, // where to extract
           strict: true,
           onentry: (entry) => {
-            extractedFilePath = `${outputDir}/${basename(entry.path)}`;
-          },
+            extractedFilePath = `${outputDir}/${basename(entry.path)}`
+          }
         })
       )
-      .on("error", reject)
-      .on("close", () => resolve(extractedFilePath));
-  });
+      .on('error', (err) => {
+        response.message.destroy()
+        reject(err)
+      })
+      .on('close', () => resolve(extractedFilePath))
+  })
 }
 
 /**
@@ -50,24 +66,34 @@ export async function downloadAndExtract(url: string, outputDir: string = "."): 
  * @param version - The version of the agent to download
  * @param outputDir - Destination path to save the downloaded file
  * @returns Promise<string> - Resolves with the path to the downloaded agent
-**/
-async function downloadAgentInternal(arch: string, os: string, version: string, outputDir: string): Promise<string> {
-  var url = `https://github.com/kittengrid/agent/releases/download/v${version}/kittengrid-agent-${os}-${arch}.tar.gz`;
+ **/
+async function downloadAgentInternal(
+  arch: string,
+  os: string,
+  version: string,
+  outputDir: string
+): Promise<string> {
+  const url = `https://github.com/kittengrid/agent/releases/download/v${version}/kittengrid-agent-${os}-${arch}.tar.gz`
   return downloadAndExtract(url, outputDir)
 }
 
 export async function downloadAgent(): Promise<string> {
-  const arch = process.arch === "x64" ? "amd64" : process.arch;
+  const arch = platform.arch === 'x64' ? 'amd64' : process.arch
 
-  if (arch !== "amd64" && arch !== "arm64") {
-    throw new Error(`Unsupported architecture: ${process.arch}. Only amd64 and arm64 are supported.`);
+  if (arch !== 'amd64' && arch !== 'arm64') {
+    throw new Error(
+      `Unsupported architecture: ${process.arch}. Only amd64 and arm64 are supported.`
+    )
   }
 
-  const os = process.platform;
-  if (os !== "linux") {
-    throw new Error(`Unsupported OS: ${process.platform}. Only linux is currently supported.`);
+  const current_os = platform.platform
+  if (current_os !== 'linux') {
+    throw new Error(
+      `Unsupported OS: ${process.platform}. Only linux is currently supported.`
+    )
   }
 
-  return downloadAgentInternal(arch, os, AGENT_VERSION, `/tmp`);
+  var tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'download-agent-'))
+
+  return downloadAgentInternal(arch, current_os, AGENT_VERSION, tempDir)
 }
-

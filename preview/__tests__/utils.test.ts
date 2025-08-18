@@ -7,13 +7,14 @@
  * 3. Error handling works properly
  */
 
-import { describe, expect, beforeEach, afterEach, it } from '@jest/globals';
+import { describe, expect, beforeEach, afterEach, it } from '@jest/globals'
 import { downloadAgent, downloadAndExtract } from '../src/utils.js'
 import { promises as fs } from 'fs'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import * as path from 'path'
 import * as os from 'os'
+import { platform } from '@actions/core'
 
 const execAsync = promisify(exec)
 
@@ -39,15 +40,17 @@ describe('DownloadAgent Integration Tests', () => {
   describe('downloadAgent', () => {
     it('downloads the agent for current platform and verifies it is executable', async () => {
       // Skip if not on Linux (as per utils.ts limitation)
-      if (process.platform !== 'linux') {
+      if (platform.platform !== 'linux') {
         console.log('Skipping test: only Linux is supported')
         return
       }
 
       // Skip if not on supported architecture
-      const arch = process.arch === 'x64' ? 'amd64' : process.arch
+      const arch = platform.arch === 'x64' ? 'amd64' : platform.arch
       if (arch !== 'amd64' && arch !== 'arm64') {
-        console.log(`Skipping test: architecture ${process.arch} not supported`)
+        console.log(
+          `Skipping test: architecture ${platform.arch} not supported`
+        )
         return
       }
 
@@ -63,62 +66,56 @@ describe('DownloadAgent Integration Tests', () => {
       try {
         await fs.access(agentPath, fs.constants.F_OK | fs.constants.X_OK)
       } catch (error) {
-        throw new Error(`Downloaded file is not executable: ${agentPath}`)
+        throw new Error(
+          `Downloaded file is not executable: ${agentPath} - ${error}`
+        )
       }
 
       // Test that the binary can be executed (should show help or version info)
-      try {
-        const { stdout, stderr } = await execAsync(`"${agentPath}" --help`, { timeout: 10000 })
+      const { stdout, stderr } = await execAsync(`"${agentPath}" --help`, {
+        timeout: 10000
+      })
 
-        // We expect either stdout or stderr to contain output (help text)
-        expect(stdout.length + stderr.length).toBeGreaterThan(0)
-      } catch (error: any) {
-        // If --help doesn't work, try --version
-        try {
-          const { stdout, stderr } = await execAsync(`"${agentPath}" --version`, { timeout: 10000 })
-          expect(stdout.length + stderr.length).toBeGreaterThan(0)
-        } catch (versionError) {
-          // If neither help nor version work, at least verify it's a valid binary
-          // by checking it doesn't fail with "permission denied" or "not found"
-          expect(error.code).not.toBe(127) // Command not found
-          expect(error.code).not.toBe(126) // Permission denied
-        }
-      }
+      // We expect either stdout or stderr to contain output (help text)
+      expect(stdout.length + stderr.length).toBeGreaterThan(0)
 
       // Clean up the downloaded file
       await fs.unlink(agentPath)
     }, 30000) // 30 second timeout for download
 
     it('throws error for unsupported architecture', async () => {
-      // Mock process.arch to simulate unsupported architecture
-      const originalArch = process.arch
-      Object.defineProperty(process, 'arch', { value: 'unsupported' })
+      // Mock platform.arch to simulate unsupported architecture
+      const originalArch = platform.arch
+      Object.defineProperty(platform, 'arch', { value: 'unsupported' })
 
       try {
-        await expect(downloadAgent()).rejects.toThrow('Unsupported architecture')
+        await expect(downloadAgent()).rejects.toThrow(
+          'Unsupported architecture'
+        )
       } finally {
         // Restore original architecture
-        Object.defineProperty(process, 'arch', { value: originalArch })
+        Object.defineProperty(platform, 'arch', { value: originalArch })
       }
     })
 
     it('throws error for unsupported OS', async () => {
-      // Mock process.platform to simulate unsupported OS
-      const originalPlatform = process.platform
-      Object.defineProperty(process, 'platform', { value: 'win32' })
+      // Mock platform.platform to simulate unsupported OS
+      const originalPlatform = platform.platform
+      Object.defineProperty(platform, 'platform', { value: 'win32' })
 
       try {
         await expect(downloadAgent()).rejects.toThrow('Unsupported OS')
       } finally {
         // Restore original platform
-        Object.defineProperty(process, 'platform', { value: originalPlatform })
+        Object.defineProperty(platform, 'platform', { value: originalPlatform })
       }
     })
   })
 
   describe('downloadAndExtract', () => {
     it('downloads and extracts a real tar.gz file', async () => {
-      const testUrl = 'https://github.com/kittengrid/agent/releases/download/v0.0.8/kittengrid-agent-linux-amd64.tar.gz'
+      const testUrl =
+        'https://github.com/kittengrid/agent/releases/download/v0.0.8/kittengrid-agent-linux-amd64.tar.gz'
       const extractedPath = await downloadAndExtract(testUrl, tempDir)
 
       // Verify file was extracted
@@ -133,15 +130,18 @@ describe('DownloadAgent Integration Tests', () => {
       try {
         await fs.access(extractedPath, fs.constants.F_OK | fs.constants.X_OK)
       } catch (error) {
-        throw new Error(`Extracted file is not executable: ${extractedPath}`)
+        throw new Error(
+          `Extracted file is not executable: ${extractedPath} ${error.message}`
+        )
       }
     }, 30000) // 30 second timeout
 
     it('handles download failures gracefully', async () => {
-      const invalidUrl = 'https://github.com/nonexistent/repo/releases/download/v1.0.0/nonexistent.tar.gz'
+      const invalidUrl =
+        'https://github.com/nonexistent/repo/releases/download/v1.0.0/nonexistent.tar.gz'
 
       await expect(downloadAndExtract(invalidUrl, tempDir)).rejects.toThrow()
-    }, 10000)
+    })
 
     it('handles invalid tar.gz files', async () => {
       // Use a URL that returns a non-tar.gz file
@@ -153,14 +153,16 @@ describe('DownloadAgent Integration Tests', () => {
 
   describe('File permissions and security', () => {
     it('sets correct executable permissions on downloaded agent', async () => {
-      if (process.platform !== 'linux') {
+      if (platform.platform !== 'linux') {
         console.log('Skipping permission test: only Linux is supported')
         return
       }
 
-      const arch = process.arch === 'x64' ? 'amd64' : process.arch
+      const arch = platform.arch === 'x64' ? 'amd64' : platform.arch
       if (arch !== 'amd64' && arch !== 'arm64') {
-        console.log(`Skipping permission test: architecture ${process.arch} not supported`)
+        console.log(
+          `Skipping permission test: architecture ${platform.arch} not supported`
+        )
         return
       }
 
