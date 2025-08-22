@@ -63,3 +63,17 @@ jobs:
       - name: Test Local Action (Preview)
         id: test-action
         uses: ./preview
+        with:
+          api-key: SOMETHING
+          dry-run: true
+          config: |
+            services:
+              - name: service-a
+                cmd: python3
+                port: 10000
+                health_check:
+                  path: /
+                args:
+                  - -m
+                  - http.server
+                  - 10000
