@@ -39147,10 +39147,9 @@ async function downloadAgent() {
     if (current_os !== 'linux') {
         throw new Error(`Unsupported OS: ${process.platform}. Only linux is currently supported.`);
     }
-    var tempDir = await promises.mkdtemp(path.join(require$$0.tmpdir(), 'download-agent-'));
+    const tempDir = await promises.mkdtemp(path.join(require$$0.tmpdir(), 'download-agent-'));
     return downloadAgentInternal(arch, current_os, AGENT_VERSION, tempDir);
 }
-
 async function showContextInfo() {
     coreExports.startGroup('Kittengrid Agent Info');
     coreExports.info(`Action version: ${process.env['GITHUB_ACTIONS']}`);
@@ -39160,6 +39159,7 @@ async function showContextInfo() {
     coreExports.info(`Operating System: ${coreExports.platform.platform}`);
     coreExports.endGroup();
 }
+
 async function populateEnv(ctx) {
     const event_number = ctx.payload.pull_request?.number;
     if (!event_number) {
@@ -39179,7 +39179,6 @@ async function populateEnv(ctx) {
 }
 async function setupConfig() {
     const config = coreExports.getInput('config');
-    coreExports.info(`Config input: ${config}`);
     if (config !== null && config.trim() !== '') {
         const tempFile = await tmpPromiseExports.file({ postfix: '.yml' });
         fs.writeFileSync(tempFile.path, config);
@@ -39206,9 +39205,8 @@ async function run() {
         coreExports.startGroup('Starting Kittengrid Agent');
         await populateEnv(ctx);
         const configFile = await setupConfig();
-        var args = [];
+        let args = [];
         if (configFile) {
-            coreExports.info(`Using config file at: ${configFile}`);
             args = ['--config', configFile];
         }
         if (coreExports.getInput('dry-run') === 'true') {

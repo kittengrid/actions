@@ -1,6 +1,6 @@
 import { HttpClient } from '@actions/http-client'
 import { promises as fs } from 'fs'
-import { platform } from '@actions/core'
+import * as core from '@actions/core'
 import { basename } from 'path'
 import * as path from 'path'
 import * as os from 'os'
@@ -78,7 +78,7 @@ async function downloadAgentInternal(
 }
 
 export async function downloadAgent(): Promise<string> {
-  const arch = platform.arch === 'x64' ? 'amd64' : process.arch
+  const arch = core.platform.arch === 'x64' ? 'amd64' : process.arch
 
   if (arch !== 'amd64' && arch !== 'arm64') {
     throw new Error(
@@ -86,14 +86,24 @@ export async function downloadAgent(): Promise<string> {
     )
   }
 
-  const current_os = platform.platform
+  const current_os = core.platform.platform
   if (current_os !== 'linux') {
     throw new Error(
       `Unsupported OS: ${process.platform}. Only linux is currently supported.`
     )
   }
 
-  var tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'download-agent-'))
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'download-agent-'))
 
   return downloadAgentInternal(arch, current_os, AGENT_VERSION, tempDir)
+}
+
+export async function showContextInfo(): Promise<void> {
+  core.startGroup('Kittengrid Agent Info')
+  core.info(`Action version: ${process.env['GITHUB_ACTIONS']}`)
+  core.info(`Node version: ${process.version}`)
+  core.info(`Agent version: ${AGENT_VERSION}`)
+  core.info(`Architecture: ${core.platform.arch}`)
+  core.info(`Operating System: ${core.platform.platform}`)
+  core.endGroup()
 }

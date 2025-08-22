@@ -1,21 +1,10 @@
 import * as core from '@actions/core'
-import { platform } from '@actions/core'
 import * as github from '@actions/github'
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import * as tmp from 'tmp-promise'
 
-import { downloadAgent, AGENT_VERSION } from './utils.js'
-
-async function showContextInfo(): Promise<void> {
-  core.startGroup('Kittengrid Agent Info')
-  core.info(`Action version: ${process.env['GITHUB_ACTIONS']}`)
-  core.info(`Node version: ${process.version}`)
-  core.info(`Agent version: ${AGENT_VERSION}`)
-  core.info(`Architecture: ${core.platform.arch}`)
-  core.info(`Operating System: ${platform.platform}`)
-  core.endGroup()
-}
+import { downloadAgent, showContextInfo } from './utils.js'
 
 async function populateEnv(ctx: typeof github.context): Promise<void> {
   const event_number = ctx.payload.pull_request?.number
@@ -51,8 +40,6 @@ async function populateEnv(ctx: typeof github.context): Promise<void> {
 
 async function setupConfig(): Promise<string | void> {
   const config = core.getInput('config')
-  core.info(`Config input: ${config}`)
-
   if (config !== null && config.trim() !== '') {
     const tempFile = await tmp.file({ postfix: '.yml' })
     fs.writeFileSync(tempFile.path, config)
@@ -85,9 +72,8 @@ export async function run(): Promise<void> {
 
     const configFile = await setupConfig()
 
-    var args: string[] = []
+    let args: string[] = []
     if (configFile) {
-      core.info(`Using config file at: ${configFile}`)
       args = ['--config', configFile]
     }
 
