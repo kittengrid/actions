@@ -6,17 +6,26 @@ branding:
   icon: heart
   color: red
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: Your input description here
+  api-key:
+    description: 'Kittengrid Api Key.'
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: Your output description here
+  log-level:
+    description: 'Log Level, defaults to info.'
+    default: 'info'
+  show-services-output:
+    description:
+      'Whether or not you want your services output to be shown in github
+      actions.'
+    default: true
+  config:
+    description:
+      'Agent configuration as a yaml string (this overrides
+      kittengrid.[yaml|yml] file).'
+    default: null
+  dry-run:
+    description: "Don't run the agent itself."
+    default: false
 
 runs:
   using: node20

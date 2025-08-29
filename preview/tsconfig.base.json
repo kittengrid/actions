@@ -18,6 +18,7 @@
     "resolveJsonModule": true,
     "strict": true,
     "strictNullChecks": true,
+    "types": ["jest", "node"],
     "target": "ES2022"
   }
 }

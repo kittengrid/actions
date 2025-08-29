@@ -27,6 +27,8 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Node.js (${{ matrix.action }})
         id: setup-node
@@ -53,15 +55,29 @@ jobs:
         run: npm run ci-test
 
   test-action:
-    name: GitHub Actions Test
+    name: GitHub Actions Test (Preview)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Test Local Action (Preview)
         id: test-action
         uses: ./preview
         with:
-          milliseconds: 2000
+          api-key: SOMETHING
+          dry-run: true
+          config: |
+            services:
+              - name: service-a
+                cmd: python3
+                port: 10000
+                health_check:
+                  path: /
+                args:
+                  - -m
+                  - http.server
+                  - 10000
