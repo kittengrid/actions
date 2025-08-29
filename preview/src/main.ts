@@ -4,43 +4,11 @@ import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import * as tmp from 'tmp-promise'
 
-import { downloadAgent, showContextInfo } from './utils.js'
-
-async function populateEnv(ctx: typeof github.context): Promise<void> {
-  const event_number = ctx.payload.pull_request?.number
-  if (!event_number) {
-    core.setFailed('This action can only be run on pull_request events.')
-    return
-  }
-
-  core.exportVariable('KITTENGRID_VCS_PROVIDER', 'github')
-  core.exportVariable(
-    'KITTENGRID_PROJECT_VCS_ID',
-    ctx.repo.owner + '/' + ctx.repo.repo
-  )
-  core.exportVariable('KITTENGRID_PULL_REQUEST_VCS_ID', event_number)
-  core.exportVariable('KITTENGRID_BIND_ADDRESS', '0.0.0.0')
-  core.exportVariable('KITTENGRID_API_URL', 'https://app.kittengrid.com')
-  core.exportVariable(
-    'KITTENGRID_WORKFLOW_RUN_ID',
-    process.env['GITHUB_RUN_ID'] || ''
-  )
-  core.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha)
-
-  // env vars from action inputs
-  core.exportVariable(
-    'KITTENGRID_LOG_LEVEL',
-    core.getInput('log-level') || 'info'
-  )
-  core.exportVariable(
-    'KITTENGRID_API_KEY',
-    core.getInput('api-key', { required: true })
-  )
-  core.exportVariable(
-    'KITTENGRID_SHOW_SERVICES_OUTPUT',
-    core.getInput('show-services-output') || 'false'
-  )
-}
+import {
+  downloadAgent,
+  showContextInfo,
+  populateEnv
+} from '@kittengrid-actions/shared'
 
 async function setupConfig(): Promise<string | void> {
   const config = core.getInput('config')
@@ -60,6 +28,8 @@ async function setupConfig(): Promise<string | void> {
  */
 export async function run(): Promise<void> {
   try {
+    console.log(core.info)
+
     const ctx = github.context
 
     core.info('Kittengrid Preview Action is starting...')

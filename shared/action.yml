@@ -1,0 +1,32 @@
+name: 'Kittengrid'
+description: 'Runs kittengrid agent'
+
+# Add your action's branding here. This will appear on the GitHub Marketplace.
+branding:
+  icon: heart
+  color: red
+
+inputs:
+  api-key:
+    description: 'Kittengrid Api Key.'
+    required: true
+  log-level:
+    description: 'Log Level, defaults to info.'
+    default: 'info'
+  show-services-output:
+    description:
+      'Whether or not you want your services output to be shown in github
+      actions.'
+    default: true
+  config:
+    description:
+      'Agent configuration as a yaml string (this overrides
+      kittengrid.[yaml|yml] file).'
+    default: null
+  dry-run:
+    description: "Don't run the agent itself."
+    default: false
+
+runs:
+  using: node20
+  main: dist/index.js

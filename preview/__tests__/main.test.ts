@@ -14,6 +14,8 @@ import {
   it
 } from '@jest/globals'
 import * as core from '../__fixtures__/core.js'
+import * as github from '../__fixtures__/github.ts'
+jest.unstable_mockModule('@actions/github', () => github)
 
 // Mocks should be declared before the module being tested is imported.
 jest.unstable_mockModule('@actions/core', () => core)
@@ -25,7 +27,10 @@ const { run } = await import('../src/main.js')
 describe('main.ts', () => {
   beforeEach(() => {
     // Set the action's inputs as return values from core.getInput().
-    core.getInput.mockImplementation(() => '500')
+    core.getInput.mockImplementation((name: string) => {
+      if (name === 'api-key') return 'github-token'
+      return 'undefined'
+    })
   })
 
   afterEach(() => {

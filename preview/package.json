@@ -1,5 +1,5 @@
 {
-  "name": "kittengrid-action",
+  "name": "@kittengrid-actions/preview",
   "description": "Kittengrid action for github",
   "version": "0.0.1",
   "author": "jose@kitengrid.com",
@@ -39,6 +39,7 @@
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/http-client": "^2.2.3",
+    "@kittengrid-actions/shared": "^0.0.1",
     "@types/js-yaml": "^4.0.9",
     "tar": "^7.4.3",
     "tmp-promise": "^3.0.3"
