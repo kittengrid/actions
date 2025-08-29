@@ -7,7 +7,14 @@
  * 3. Error handling works properly
  */
 
-import { jest, describe, expect, beforeEach, afterEach, it } from '@jest/globals'
+import {
+  jest,
+  describe,
+  expect,
+  beforeEach,
+  afterEach,
+  it
+} from '@jest/globals'
 
 import { promises as fs } from 'fs'
 import { exec } from 'child_process'
@@ -24,8 +31,8 @@ import * as github from '../__fixtures__/github.ts'
 jest.unstable_mockModule('@actions/core', () => core)
 jest.unstable_mockModule('@actions/github', () => core)
 
-
-const { downloadAgent, downloadAndExtract, showContextInfo, populateEnv } = await import('../src/utils')
+const { downloadAgent, downloadAndExtract, showContextInfo, populateEnv } =
+  await import('../src/utils')
 
 const execAsync = promisify(exec)
 
@@ -64,12 +71,14 @@ describe('DownloadAgent Integration Tests', () => {
       context.payload = {}
 
       await populateEnv(context)
-      expect(core.exportVariable).not.toHaveBeenCalledWith('KITTENGRID_EVENT_NUMBER', expect.anything())
+      expect(core.exportVariable).not.toHaveBeenCalledWith(
+        'KITTENGRID_EVENT_NUMBER',
+        expect.anything()
+      )
       context.payload = oldPayload
     })
 
     it('should set KITTENGRID_API_KEY based on the input passed', async () => {
-
       core.getInput.mockImplementation((name: string) => {
         if (name === 'api-key') return 'github-token'
         return 'undefined'
@@ -78,26 +87,39 @@ describe('DownloadAgent Integration Tests', () => {
       const context = github.context
 
       await populateEnv(context)
-      expect(core.exportVariable).toHaveBeenCalledWith('KITTENGRID_API_KEY', 'github-token')
+      expect(core.exportVariable).toHaveBeenCalledWith(
+        'KITTENGRID_API_KEY',
+        'github-token'
+      )
     })
   })
 
   describe('downloadAgent', () => {
     it('throws error on unsupported arch', async () => {
-      const originalArch = Object.getOwnPropertyDescriptor(core.platform, 'arch')
+      const originalArch = Object.getOwnPropertyDescriptor(
+        core.platform,
+        'arch'
+      )
       Object.defineProperty(core.platform, 'arch', { value: 'unsupported' })
 
-      await expect(downloadAgent()).rejects.toThrow('Unsupported architecture: unsupported. Only amd64 and arm64 are supported.')
+      await expect(downloadAgent()).rejects.toThrow(
+        'Unsupported architecture: unsupported. Only amd64 and arm64 are supported.'
+      )
       Object.defineProperty(core.platform, 'arch', {
         value: originalArch?.value
       })
     })
 
     it('throws error on unsupported OS', async () => {
-      const originalPlatform = Object.getOwnPropertyDescriptor(core.platform, 'platform')
+      const originalPlatform = Object.getOwnPropertyDescriptor(
+        core.platform,
+        'platform'
+      )
       Object.defineProperty(core.platform, 'platform', { value: 'win32' })
 
-      await expect(downloadAgent()).rejects.toThrow('Unsupported OS: win32. Only linux is currently supported.')
+      await expect(downloadAgent()).rejects.toThrow(
+        'Unsupported OS: win32. Only linux is currently supported.'
+      )
       Object.defineProperty(core.platform, 'platform', {
         value: originalPlatform?.value
       })

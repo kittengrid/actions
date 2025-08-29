@@ -5,8 +5,17 @@
     "preview",
     "terminal"
   ],
+  "scripts": {
+    "bundle": "turbo bundle",
+    "test": "turbo test",
+    "prettier:format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore",
+    "prettier:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore"
+  },
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@jest/globals": "^30.1.1"
-  }
+    "@jest/globals": "^30.1.1",
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.6"
+  },
+  "packageManager": "npm@11.5.1"
 }

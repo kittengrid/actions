@@ -66357,13 +66357,13 @@ async function downloadAgentInternal(arch, os, version, outputDir) {
     return downloadAndExtract(url, outputDir);
 }
 async function downloadAgent() {
-    const arch = coreExports.platform.arch === 'x64' ? 'amd64' : process.arch;
+    const arch = coreExports.platform.arch === 'x64' ? 'amd64' : coreExports.platform.arch;
     if (arch !== 'amd64' && arch !== 'arm64') {
-        throw new Error(`Unsupported architecture: ${process.arch}. Only amd64 and arm64 are supported.`);
+        throw new Error(`Unsupported architecture: ${arch}. Only amd64 and arm64 are supported.`);
     }
     const current_os = coreExports.platform.platform;
     if (current_os !== 'linux') {
-        throw new Error(`Unsupported OS: ${process.platform}. Only linux is currently supported.`);
+        throw new Error(`Unsupported OS: ${current_os}. Only linux is currently supported.`);
     }
     const tempDir = await promises.mkdtemp(path__default.join(require$$0__default.tmpdir(), 'download-agent-'));
     return downloadAgentInternal(arch, current_os, AGENT_VERSION, tempDir);
@@ -66378,7 +66378,6 @@ async function showContextInfo() {
     coreExports.endGroup();
 }
 async function populateEnv(ctx) {
-    console.log(coreExports.info);
     const event_number = ctx.payload.pull_request?.number;
     if (!event_number) {
         coreExports.setFailed('This action can only be run on pull_request events.');

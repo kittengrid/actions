@@ -1,4 +1,8 @@
 {
   "files": [],
-  "references": [{ "path": "shared" }, { "path": "preview" }, { "path": "terminal" }]
+  "references": [
+    { "path": "shared" },
+    { "path": "preview" },
+    { "path": "terminal" }
+  ]
 }

@@ -1,7 +1,4 @@
 # Dependency directory
-preview/node_modules
-terminal/node_modules
-shared/node_modules
 node_modules
 
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
@@ -103,3 +100,5 @@ __tests__/runner/*
 # IDE files
 .idea
 *.code-workspace
+
+.turbo
