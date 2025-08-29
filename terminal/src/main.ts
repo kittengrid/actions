@@ -1,8 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as exec from '@actions/exec'
-import * as fs from 'fs'
-import * as tmp from 'tmp-promise'
 
 import { downloadAgent, showContextInfo } from './utils.js'
 
@@ -27,30 +25,10 @@ async function populateEnv(ctx: typeof github.context): Promise<void> {
   )
   core.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha)
 
-  // env vars from action inputs
-  core.exportVariable(
-    'KITTENGRID_LOG_LEVEL',
-    core.getInput('log-level') || 'info'
-  )
   core.exportVariable(
     'KITTENGRID_API_KEY',
     core.getInput('api-key', { required: true })
   )
-  core.exportVariable(
-    'KITTENGRID_SHOW_SERVICES_OUTPUT',
-    core.getInput('show-services-output') || 'false'
-  )
-}
-
-async function setupConfig(): Promise<string | void> {
-  const config = core.getInput('config')
-  if (config !== null && config.trim() !== '') {
-    const tempFile = await tmp.file({ postfix: '.yml' })
-    fs.writeFileSync(tempFile.path, config)
-    core.exportVariable('KITTENGRID_CONFIG', tempFile.path)
-    core.info('Using config from action input.')
-    return tempFile.path
-  }
 }
 
 /**
@@ -71,26 +49,8 @@ export async function run(): Promise<void> {
     core.info('Kittengrid agent extraction complete.')
     core.endGroup()
 
-    core.startGroup('Starting Kittengrid Agent')
+    core.startGroup('Starting Kittengrid Agent (Terminal mode)')
     await populateEnv(ctx)
-
-    const configFile = await setupConfig()
-
-    let args: string[] = []
-    if (configFile) {
-      args = ['--config', configFile]
-    }
-
-    // If the actor contains bot
-    if (ctx.actor.toLowerCase().includes('bot')) {
-      core.info(ctx.actor)
-      args.push('--start-services')
-      args.push('true')
-    }
-
-    // We start terminal by default
-    args.push('--start-terminal')
-    args.push('true')
 
     // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
     const dryRunInput = core.getInput('dry-run').toLowerCase()
@@ -110,17 +70,16 @@ export async function run(): Promise<void> {
     if (dryRunInput === 'true') {
       core.info('Dry run mode enabled, not executing the agent')
       core.info('I would have run:')
-      core.info(`${agentPath} ${args.join(' ')}`)
+      core.info(`${agentPath} --start-terminal true`)
       return
     }
-
     await exec.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars'])
     await exec.exec('bash', ['-c', 'env | grep PATH > /tmp/vars'])
     await exec.exec('sudo', [
       '-E',
       'bash',
       '-c',
-      `source /tmp/vars && ${agentPath} ${args.join(' ')}`
+      `source /tmp/vars && ${agentPath} --start-terminal true`
     ])
   } catch (error) {
     // Fail the workflow run if an error occurs

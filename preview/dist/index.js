@@ -39085,7 +39085,7 @@ const mtimeFilter = (opt) => {
             );
 };
 
-const AGENT_VERSION = '0.0.8';
+const AGENT_VERSION = '0.0.11';
 /**
  * Downloads a .tar.gz from a given URL and extracts its single file.
  * Saves the extracted file to the specified destination directory.
@@ -39167,9 +39167,10 @@ async function populateEnv(ctx) {
         return;
     }
     coreExports.exportVariable('KITTENGRID_VCS_PROVIDER', 'github');
-    coreExports.exportVariable('KITTENGRID_PROJECT_VCS_ID', ctx.repo.repo);
+    coreExports.exportVariable('KITTENGRID_PROJECT_VCS_ID', ctx.repo.owner + '/' + ctx.repo.repo);
     coreExports.exportVariable('KITTENGRID_PULL_REQUEST_VCS_ID', event_number);
     coreExports.exportVariable('KITTENGRID_BIND_ADDRESS', '0.0.0.0');
+    coreExports.exportVariable('KITTENGRID_API_URL', 'https://app.kittengrid.com');
     coreExports.exportVariable('KITTENGRID_WORKFLOW_RUN_ID', process.env['GITHUB_RUN_ID'] || '');
     coreExports.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha);
     // env vars from action inputs
@@ -39209,6 +39210,15 @@ async function run() {
         if (configFile) {
             args = ['--config', configFile];
         }
+        // If the actor contains bot
+        if (ctx.actor.toLowerCase().includes('bot')) {
+            coreExports.info(ctx.actor);
+            args.push('--start-services');
+            args.push('true');
+        }
+        // We start terminal by default
+        args.push('--start-terminal');
+        args.push('true');
         // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
         const dryRunInput = coreExports.getInput('dry-run').toLowerCase();
         if (dryRunInput !== 'true' &&
@@ -39223,7 +39233,14 @@ async function run() {
             coreExports.info(`${agentPath} ${args.join(' ')}`);
             return;
         }
-        await execExports.exec(agentPath, args);
+        await execExports.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars']);
+        await execExports.exec('bash', ['-c', 'env | grep PATH > /tmp/vars']);
+        await execExports.exec('sudo', [
+            '-E',
+            'bash',
+            '-c',
+            `source /tmp/vars && ${agentPath} ${args.join(' ')}`
+        ]);
     }
     catch (error) {
         // Fail the workflow run if an error occurs

@@ -1,5 +1,6 @@
 # Dependency directory
 preview/node_modules
+terminal/node_modules
 
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs

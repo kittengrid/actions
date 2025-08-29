@@ -31,6 +31,7 @@ jobs:
           - typescript
         action:
           - preview
+          - terminal
 
     steps:
       - name: Checkout

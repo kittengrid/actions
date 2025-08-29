@@ -25,6 +25,7 @@ jobs:
       matrix:
         action:
           - preview
+          - terminal
     runs-on: ubuntu-latest
     defaults:
       run:
