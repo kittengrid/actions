@@ -39209,7 +39209,15 @@ async function run() {
         if (configFile) {
             args = ['--config', configFile];
         }
-        if (coreExports.getInput('dry-run') === 'true') {
+        // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
+        const dryRunInput = coreExports.getInput('dry-run').toLowerCase();
+        if (dryRunInput !== 'true' &&
+            dryRunInput !== 'false' &&
+            dryRunInput !== '') {
+            coreExports.setFailed(`Invalid value for dry-run input: ${coreExports.getInput('dry-run')}. It must be either 'true' or 'false'.`);
+            return;
+        }
+        if (dryRunInput === 'true') {
             coreExports.info('Dry run mode enabled, not executing the agent');
             coreExports.info('I would have run:');
             coreExports.info(`${agentPath} ${args.join(' ')}`);

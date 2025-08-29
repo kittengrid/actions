@@ -77,7 +77,22 @@ export async function run(): Promise<void> {
       args = ['--config', configFile]
     }
 
-    if (core.getInput('dry-run') === 'true') {
+    // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
+    const dryRunInput = core.getInput('dry-run').toLowerCase()
+    if (
+      dryRunInput !== 'true' &&
+      dryRunInput !== 'false' &&
+      dryRunInput !== ''
+    ) {
+      core.setFailed(
+        `Invalid value for dry-run input: ${core.getInput(
+          'dry-run'
+        )}. It must be either 'true' or 'false'.`
+      )
+      return
+    }
+
+    if (dryRunInput === 'true') {
       core.info('Dry run mode enabled, not executing the agent')
       core.info('I would have run:')
       core.info(`${agentPath} ${args.join(' ')}`)

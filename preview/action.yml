@@ -17,7 +17,7 @@ inputs:
     description:
       'Whether or not you want your services output to be shown in github
       actions.'
-    default: 'true'
+    default: true
   config:
     description:
       'Agent configuration as a yaml string (this overrides
