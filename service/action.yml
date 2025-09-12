@@ -1,0 +1,48 @@
+name: 'Kittengrid'
+description: 'Starts a service and makes it publicy available.'
+
+branding:
+  icon: heart
+  color: red
+
+inputs:
+  api-key:
+    description: 'Kittengrid Api Key.'
+    required: true
+  dry-run:
+    description: "Don't run the service (for testing purposes)."
+    default: false
+  name:
+    description: 'Service name'
+    required: true
+  port:
+    description: 'Service port'
+    required: true
+  cmd:
+    description:
+      'The path of the file to be executed to start the service. Note that this
+      should only be a file path, arguments are specified in `args` input
+      parameters'
+    required: true
+  args:
+    description:
+      'Arguments to be passed to the specified command as a single string. Note
+      that the arguments are not passed through a shell, but given literally to
+      the program. This means that shell syntax like quotes, escaped characters,
+      word splitting, glob patterns, variable substitution, etc. have no effect.'
+    required: false
+  health_check:
+    description:
+      'An optional HTTP health check that will be used to control the service
+      status. If no healthcheck is specified, a simple TCP check is used
+      instread. It is composed by 4 parameters that are to be specified comma
+      separated. interval: The check interval in seconds, defaults to 30s.
+      timeout: The check timeout in seconds, defaults to 10s. retries: The
+      number of retries before setting the service as stopped. Defaults to 3.
+      path: The path to be used in the request. Example: health_check:
+      "interval=10,path=/myapp"'
+    require: false
+
+runs:
+  using: node20
+  main: dist/index.js

@@ -3,7 +3,8 @@
   "workspaces": [
     "shared",
     "preview",
-    "terminal"
+    "terminal",
+    "service"
   ],
   "scripts": {
     "bundle": "turbo bundle",

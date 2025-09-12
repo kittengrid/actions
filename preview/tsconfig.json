@@ -5,7 +5,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
-    "allowJs": false
+    "allowJs": true
   },
   "references": [{ "path": "../shared" }],
   "exclude": ["__fixtures__", "__test__", "coverage", "dist", "node_modules"],

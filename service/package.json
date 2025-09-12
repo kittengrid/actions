@@ -1,17 +1,17 @@
 {
-  "name": "@kittengrid-actions/terminal",
-  "description": "Kittengrid action for github",
+  "name": "@kittengrid-actions/service",
+  "description": "Kittengrid action for exporting a single service",
   "version": "0.0.1",
   "author": "jose@kitengrid.com",
   "type": "module",
   "private": true,
-  "homepage": "https://github.com/kittengrid/action",
+  "homepage": "https://github.com/kittengrid/actions/service",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kittengrid/action.git"
+    "url": "git+https://github.com/kittengrid/actions.git"
   },
   "bugs": {
-    "url": "https://github.com/kittengrid/action.git"
+    "url": "https://github.com/kittengrid/actions.git"
   },
   "keywords": [
     "actions"
