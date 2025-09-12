@@ -19,6 +19,7 @@ jobs:
         action:
           - preview
           - terminal
+          - service
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -97,4 +98,25 @@ jobs:
         uses: ./terminal
         with:
           api-key: SOMETHING
+          dry-run: true
+
+  test-service-action:
+    name: GitHub Actions Test (Service)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Test Local Action (Service)
+        id: test-action
+        uses: ./service
+        with:
+          api-key: SOMETHING
+          name: test-service
+          cmd: python3
+          args: '-m http.server 10000'
+          port: 10000
           dry-run: true

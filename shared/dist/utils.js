@@ -34150,6 +34150,8 @@ const mtimeFilter = (opt) => {
             );
 };
 
+var execExports = requireExec();
+
 const AGENT_VERSION = '0.0.11';
 /**
  * Downloads a .tar.gz from a given URL and extracts its single file.
@@ -34265,6 +34267,56 @@ async function populateEnv(ctx) {
     coreExports.getInput('show-services-output') || 'false'
   );
 }
+/**
+ * Starts the Kittengrid agent with the provided arguments.
+ *
+ * @param ctx - The GitHub action context
+ * @param args - Arguments to pass to the agent
+ * @param dryRun - If true, the agent will not be executed, just logged
+ * @returns Promise<void> - Resolves when the agent has started or in dry run mode
+ **/
+async function startAgent(ctx, args, dryRun) {
+  coreExports.info('Kittengrid Preview Action is starting...');
+  await showContextInfo();
+  coreExports.startGroup('Downloading and extracting Kittengrid agent...');
+  const agentPath = await downloadAgent();
+  coreExports.info(`Kittengrid agent downloaded to: ${agentPath}`);
+  coreExports.info('Kittengrid agent extraction complete.');
+  coreExports.endGroup();
+  coreExports.startGroup('Starting Kittengrid Agent');
+  await populateEnv(ctx);
+  if (dryRun) {
+    coreExports.info('Dry run mode enabled, not executing the agent');
+    coreExports.info('I would have run:');
+    coreExports.info(`${agentPath} --start-terminal true`);
+    return
+  }
+  await execExports.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars']);
+  await execExports.exec('bash', ['-c', 'env | grep PATH > /tmp/vars']);
+  await execExports.exec('sudo', [
+    '-E',
+    'bash',
+    '-c',
+    `source /tmp/vars && ${agentPath} ${args.join(' ')}`
+  ]);
+}
+/**
+ * Validates the dry-run input string and converts it to a boolean.
+ *
+ * @param input - The dry-run input string
+ * @returns Promise<boolean> - Resolves with true if dry-run is 'true', false otherwise
+ * @throws Error if the input is not 'true', 'false', or empty
+ */
+async function validateDryRunInput(input) {
+  // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
+  const dryRunInput = input.toLowerCase();
+  if (dryRunInput !== 'true' && dryRunInput !== 'false' && dryRunInput !== '') {
+    throw new Error(
+      `Invalid value for dry-run input: ${coreExports.getInput('dry-run')}. It must be either 'true' or 'false'.`
+    )
+  }
+  return dryRunInput === 'true'
+}
 
-export { AGENT_VERSION, downloadAgent, downloadAndExtract, populateEnv, showContextInfo };
+export { AGENT_VERSION, startAgent, validateDryRunInput };
 //# sourceMappingURL=utils.js.map

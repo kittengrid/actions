@@ -23,11 +23,9 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "bundle": "npm run format:write && npm run package",
+    "bundle": "npm run package",
     "ci-test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
     "coverage": "npx make-coverage-badge --output-path ./badges/coverage.svg",
-    "format:write": "npx prettier --write .",
-    "format:check": "npx prettier --check .",
     "lint": "npx eslint .",
     "local-action": "npx @github/local-action . src/main.ts .env",
     "package": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
@@ -38,10 +36,8 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/http-client": "^2.2.3",
     "@kittengrid-actions/shared": "^0.0.1",
     "@types/js-yaml": "^4.0.9",
-    "tar": "^7.4.3",
     "tmp-promise": "^3.0.3"
   },
   "devDependencies": {

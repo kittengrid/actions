@@ -26,6 +26,7 @@ jobs:
         action:
           - preview
           - terminal
+          - service
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -64,4 +65,5 @@ jobs:
           VALIDATE_JSCPD: false
           VALIDATE_TYPESCRIPT_ES: false
           VALIDATE_JSON: false
-          DEFAULT_WORKSPACE: /home/runner/work/actions/actions/${{ matrix.action }}
+          DEFAULT_WORKSPACE:
+            /home/runner/work/actions/actions/${{ matrix.action }}

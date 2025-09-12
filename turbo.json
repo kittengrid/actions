@@ -5,6 +5,7 @@
       "outputs": ["dist/**"],
       "dependsOn": ["^bundle"]
     },
+    "format:write": {},
     "test": {},
     "test:watch": {},
     "type-check": {

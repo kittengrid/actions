@@ -31269,8 +31269,6 @@ function requireGithub () {
 
 var githubExports = requireGithub();
 
-var execExports = requireExec$1();
-
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
 var lib = {};
@@ -65385,6 +65383,8 @@ const mtimeFilter = (opt) => {
             );
 };
 
+var execExports = requireExec();
+
 const AGENT_VERSION = '0.0.11';
 /**
  * Downloads a .tar.gz from a given URL and extracts its single file.
@@ -65500,6 +65500,56 @@ async function populateEnv(ctx) {
     coreExports.getInput('show-services-output') || 'false'
   );
 }
+/**
+ * Starts the Kittengrid agent with the provided arguments.
+ *
+ * @param ctx - The GitHub action context
+ * @param args - Arguments to pass to the agent
+ * @param dryRun - If true, the agent will not be executed, just logged
+ * @returns Promise<void> - Resolves when the agent has started or in dry run mode
+ **/
+async function startAgent(ctx, args, dryRun) {
+  coreExports.info('Kittengrid Preview Action is starting...');
+  await showContextInfo();
+  coreExports.startGroup('Downloading and extracting Kittengrid agent...');
+  const agentPath = await downloadAgent();
+  coreExports.info(`Kittengrid agent downloaded to: ${agentPath}`);
+  coreExports.info('Kittengrid agent extraction complete.');
+  coreExports.endGroup();
+  coreExports.startGroup('Starting Kittengrid Agent');
+  await populateEnv(ctx);
+  if (dryRun) {
+    coreExports.info('Dry run mode enabled, not executing the agent');
+    coreExports.info('I would have run:');
+    coreExports.info(`${agentPath} --start-terminal true`);
+    return
+  }
+  await execExports.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars']);
+  await execExports.exec('bash', ['-c', 'env | grep PATH > /tmp/vars']);
+  await execExports.exec('sudo', [
+    '-E',
+    'bash',
+    '-c',
+    `source /tmp/vars && ${agentPath} ${args.join(' ')}`
+  ]);
+}
+/**
+ * Validates the dry-run input string and converts it to a boolean.
+ *
+ * @param input - The dry-run input string
+ * @returns Promise<boolean> - Resolves with true if dry-run is 'true', false otherwise
+ * @throws Error if the input is not 'true', 'false', or empty
+ */
+async function validateDryRunInput(input) {
+  // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
+  const dryRunInput = input.toLowerCase();
+  if (dryRunInput !== 'true' && dryRunInput !== 'false' && dryRunInput !== '') {
+    throw new Error(
+      `Invalid value for dry-run input: ${coreExports.getInput('dry-run')}. It must be either 'true' or 'false'.`
+    )
+  }
+  return dryRunInput === 'true'
+}
 
 /**
  * The main function for the action.
@@ -65509,37 +65559,8 @@ async function populateEnv(ctx) {
 async function run() {
     try {
         const ctx = githubExports.context;
-        coreExports$1.info('Kittengrid Preview Action is starting...');
-        await showContextInfo();
-        coreExports$1.startGroup('Downloading and extracting Kittengrid agent...');
-        const agentPath = await downloadAgent();
-        coreExports$1.info(`Kittengrid agent downloaded to: ${agentPath}`);
-        coreExports$1.info('Kittengrid agent extraction complete.');
-        coreExports$1.endGroup();
-        coreExports$1.startGroup('Starting Kittengrid Agent (Terminal mode)');
-        await populateEnv(ctx);
-        // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
-        const dryRunInput = coreExports$1.getInput('dry-run').toLowerCase();
-        if (dryRunInput !== 'true' &&
-            dryRunInput !== 'false' &&
-            dryRunInput !== '') {
-            coreExports$1.setFailed(`Invalid value for dry-run input: ${coreExports$1.getInput('dry-run')}. It must be either 'true' or 'false'.`);
-            return;
-        }
-        if (dryRunInput === 'true') {
-            coreExports$1.info('Dry run mode enabled, not executing the agent');
-            coreExports$1.info('I would have run:');
-            coreExports$1.info(`${agentPath} --start-terminal true`);
-            return;
-        }
-        await execExports.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars']);
-        await execExports.exec('bash', ['-c', 'env | grep PATH > /tmp/vars']);
-        await execExports.exec('sudo', [
-            '-E',
-            'bash',
-            '-c',
-            `source /tmp/vars && ${agentPath} --start-terminal true`
-        ]);
+        const dryRun = await validateDryRunInput(coreExports$1.getInput('dry-run'));
+        startAgent(ctx, ['--start-terminal', 'true'], dryRun);
     }
     catch (error) {
         // Fail the workflow run if an error occurs

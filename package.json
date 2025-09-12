@@ -9,8 +9,8 @@
   "scripts": {
     "bundle": "turbo bundle",
     "test": "turbo test",
-    "prettier:format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore",
-    "prettier:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore"
+    "format:write": "npx prettier --write .",
+    "format:check": "npx prettier --check ."
   },
   "dependencies": {
     "@actions/core": "^1.11.1",

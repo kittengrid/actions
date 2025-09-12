@@ -1,38 +1,50 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import * as exec from '@actions/exec'
+import * as fs from 'fs'
+import * as tmp from 'tmp-promise'
+import yaml from 'js-yaml'
 
-import {
-  downloadAgent,
-  showContextInfo,
-  populateEnv
-} from '@kittengrid-actions/shared'
+import { validateDryRunInput, startAgent } from '@kittengrid-actions/shared'
 
-async function populateEnv(ctx: typeof github.context): Promise<void> {
-  const event_number = ctx.payload.pull_request?.number
-  if (!event_number) {
-    core.setFailed('This action can only be run on pull_request events.')
-    return
+async function setupConfig(config: Object): Promise<string | void> {
+  if (config !== null) {
+    const tempFile = await tmp.file({ postfix: '.yml' })
+    fs.writeFileSync(tempFile.path, yaml.dump(config))
+    core.exportVariable('KITTENGRID_CONFIG', tempFile.path)
+    core.info('Using config from action input.')
+    return tempFile.path
+  }
+}
+
+/**
+ * Processes the healthcheck input.
+ *
+ * @param healthcheck - The healthcheck input string, a comma separated list of properties in the form key=value
+ * @returns The processed healthcheck as an object, or undefined if the input is empty
+ */
+
+function processHealthCheck(healthcheck: string): Object | undefined {
+  const defaults = {
+    interval: '30',
+    timeout: '10',
+    retries: '3',
+    path: '/'
   }
 
-  core.exportVariable('KITTENGRID_VCS_PROVIDER', 'github')
-  core.exportVariable(
-    'KITTENGRID_PROJECT_VCS_ID',
-    ctx.repo.owner + '/' + ctx.repo.repo
-  )
-  core.exportVariable('KITTENGRID_PULL_REQUEST_VCS_ID', event_number)
-  core.exportVariable('KITTENGRID_BIND_ADDRESS', '0.0.0.0')
-  core.exportVariable('KITTENGRID_API_URL', 'https://app.kittengrid.com')
-  core.exportVariable(
-    'KITTENGRID_WORKFLOW_RUN_ID',
-    process.env['GITHUB_RUN_ID'] || ''
-  )
-  core.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha)
+  if (healthcheck && healthcheck.trim() !== '') {
+    const healthcheckParts = healthcheck.split(',').map((part) => part.trim())
+    healthcheckParts.forEach((part) => {
+      const [key, value] = part.split('=').map((p) => p.trim())
+      if (key in defaults && value) {
+        // @ts-ignore
+        defaults[key] = value
+      }
+    })
 
-  core.exportVariable(
-    'KITTENGRID_API_KEY',
-    core.getInput('api-key', { required: true })
-  )
+    return defaults
+  }
+
+  return undefined
 }
 
 /**
@@ -43,48 +55,37 @@ async function populateEnv(ctx: typeof github.context): Promise<void> {
 export async function run(): Promise<void> {
   try {
     const ctx = github.context
-
-    core.info('Kittengrid Preview Action is starting...')
-    await showContextInfo()
-
-    core.startGroup('Downloading and extracting Kittengrid agent...')
-    const agentPath = await downloadAgent()
-    core.info(`Kittengrid agent downloaded to: ${agentPath}`)
-    core.info('Kittengrid agent extraction complete.')
-    core.endGroup()
-
-    core.startGroup('Starting Kittengrid Agent (Terminal mode)')
-    await populateEnv(ctx)
-
-    // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
-    const dryRunInput = core.getInput('dry-run').toLowerCase()
-    if (
-      dryRunInput !== 'true' &&
-      dryRunInput !== 'false' &&
-      dryRunInput !== ''
-    ) {
-      core.setFailed(
-        `Invalid value for dry-run input: ${core.getInput(
-          'dry-run'
-        )}. It must be either 'true' or 'false'.`
-      )
-      return
+    const dryRun = await validateDryRunInput(core.getInput('dry-run'))
+    var config: Object = {
+      services: [
+        {
+          name: core.getInput('name'),
+          cmd: core.getInput('cmd'),
+          port: core.getInput('port'),
+          healthcheck: processHealthCheck(core.getInput('healthcheck'))
+        }
+      ]
     }
 
-    if (dryRunInput === 'true') {
-      core.info('Dry run mode enabled, not executing the agent')
-      core.info('I would have run:')
-      core.info(`${agentPath} --start-terminal true`)
-      return
+    const configFile = await setupConfig(config)
+
+    let args: string[] = []
+    if (configFile) {
+      args = ['--config', configFile]
     }
-    await exec.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars'])
-    await exec.exec('bash', ['-c', 'env | grep PATH > /tmp/vars'])
-    await exec.exec('sudo', [
-      '-E',
-      'bash',
-      '-c',
-      `source /tmp/vars && ${agentPath} --start-terminal true`
-    ])
+
+    // If the actor contains bot
+    if (ctx.actor.toLowerCase().includes('bot')) {
+      core.info(ctx.actor)
+      args.push('--start-services')
+      args.push('true')
+    }
+
+    // We start terminal by default
+    args.push('--start-terminal')
+    args.push('true')
+
+    startAgent(ctx, args, dryRun)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

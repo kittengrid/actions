@@ -32,15 +32,17 @@ inputs:
       word splitting, glob patterns, variable substitution, etc. have no effect.'
     required: false
   health_check:
-    description:
-      'An optional HTTP health check that will be used to control the service
+    description: |
+      An optional HTTP health check that will be used to control the service
       status. If no healthcheck is specified, a simple TCP check is used
       instread. It is composed by 4 parameters that are to be specified comma
-      separated. interval: The check interval in seconds, defaults to 30s.
-      timeout: The check timeout in seconds, defaults to 10s. retries: The
-      number of retries before setting the service as stopped. Defaults to 3.
-      path: The path to be used in the request. Example: health_check:
-      "interval=10,path=/myapp"'
+      separated.
+        interval: The check interval in seconds, defaults to 30.
+        timeout: The check timeout in seconds, defaults to 10.
+        retries: The number of retries before setting the service as stopped, defaults to 3.
+        path: The path to be used in the request, defaults to '/'
+      Example: health_check:
+        "interval=10,path=/myapp"
     require: false
 
 runs:

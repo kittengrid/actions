@@ -6,6 +6,7 @@ import { basename } from 'path'
 import * as path from 'path'
 import * as os from 'os'
 import * as tar from 'tar'
+import * as exec from '@actions/exec'
 export const AGENT_VERSION = '0.0.11'
 
 /**
@@ -16,7 +17,7 @@ export const AGENT_VERSION = '0.0.11'
  * @param outputDir - Directory where the extracted file should go
  * @returns Promise<string> - Resolves with the extracted file path
  */
-export async function downloadAndExtract(
+async function downloadAndExtract(
   url: string,
   outputDir: string = '.'
 ): Promise<string> {
@@ -78,7 +79,7 @@ async function downloadAgentInternal(
   return downloadAndExtract(url, outputDir)
 }
 
-export async function downloadAgent(): Promise<string> {
+async function downloadAgent(): Promise<string> {
   const arch = core.platform.arch === 'x64' ? 'amd64' : core.platform.arch
   if (arch !== 'amd64' && arch !== 'arm64') {
     throw new Error(
@@ -98,7 +99,7 @@ export async function downloadAgent(): Promise<string> {
   return downloadAgentInternal(arch, current_os, AGENT_VERSION, tempDir)
 }
 
-export async function showContextInfo(): Promise<void> {
+async function showContextInfo(): Promise<void> {
   core.startGroup('Kittengrid Agent Info')
   core.info(`Action version: ${process.env['GITHUB_ACTIONS']}`)
   core.info(`Node version: ${process.version}`)
@@ -108,7 +109,7 @@ export async function showContextInfo(): Promise<void> {
   core.endGroup()
 }
 
-export async function populateEnv(ctx: typeof github.context): Promise<void> {
+async function populateEnv(ctx: typeof github.context): Promise<void> {
   const event_number = ctx.payload.pull_request?.number
   if (!event_number) {
     core.setFailed('This action can only be run on pull_request events.')
@@ -142,4 +143,65 @@ export async function populateEnv(ctx: typeof github.context): Promise<void> {
     'KITTENGRID_SHOW_SERVICES_OUTPUT',
     core.getInput('show-services-output') || 'false'
   )
+}
+
+/**
+ * Starts the Kittengrid agent with the provided arguments.
+ *
+ * @param ctx - The GitHub action context
+ * @param args - Arguments to pass to the agent
+ * @param dryRun - If true, the agent will not be executed, just logged
+ * @returns Promise<void> - Resolves when the agent has started or in dry run mode
+ **/
+export async function startAgent(
+  ctx: typeof github.context,
+  args: string[],
+  dryRun: boolean
+): Promise<void> {
+  core.info('Kittengrid Preview Action is starting...')
+  await showContextInfo()
+
+  core.startGroup('Downloading and extracting Kittengrid agent...')
+  const agentPath = await downloadAgent()
+  core.info(`Kittengrid agent downloaded to: ${agentPath}`)
+  core.info('Kittengrid agent extraction complete.')
+  core.endGroup()
+
+  core.startGroup('Starting Kittengrid Agent')
+  await populateEnv(ctx)
+  if (dryRun) {
+    core.info('Dry run mode enabled, not executing the agent')
+    core.info('I would have run:')
+    core.info(`${agentPath} --start-terminal true`)
+    return
+  }
+  await exec.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars'])
+  await exec.exec('bash', ['-c', 'env | grep PATH > /tmp/vars'])
+  await exec.exec('sudo', [
+    '-E',
+    'bash',
+    '-c',
+    `source /tmp/vars && ${agentPath} ${args.join(' ')}`
+  ])
+}
+
+/**
+ * Validates the dry-run input string and converts it to a boolean.
+ *
+ * @param input - The dry-run input string
+ * @returns Promise<boolean> - Resolves with true if dry-run is 'true', false otherwise
+ * @throws Error if the input is not 'true', 'false', or empty
+ */
+export async function validateDryRunInput(input: string): Promise<boolean> {
+  // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
+  const dryRunInput = input.toLowerCase()
+  if (dryRunInput !== 'true' && dryRunInput !== 'false' && dryRunInput !== '') {
+    throw new Error(
+      `Invalid value for dry-run input: ${core.getInput(
+        'dry-run'
+      )}. It must be either 'true' or 'false'.`
+    )
+  }
+
+  return dryRunInput === 'true'
 }
