@@ -36,5 +36,8 @@ export default {
       }
     ]
   },
+  moduleNameMapper: {
+    '^@actions/core$': '<rootDir>/../test/mocks/actions-core.mjs'
+  },
   verbose: true
 }

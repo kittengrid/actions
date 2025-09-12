@@ -1,0 +1,19 @@
+name: 'Kittengrid'
+description: 'Executes a terminal'
+
+# Add your action's branding here. This will appear on the GitHub Marketplace.
+branding:
+  icon: heart
+  color: red
+
+inputs:
+  api-key:
+    description: 'Kittengrid Api Key.'
+    required: true
+  dry-run:
+    description: "Don't run the terminal (for testing purposes)."
+    default: false
+
+runs:
+  using: node20
+  main: dist/index.js
