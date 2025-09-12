@@ -3,11 +3,11 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "module": "NodeNext",
+    "composite": true,
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
-    "allowJs": true
+    "allowJs": false
   },
-  "references": [{ "path": "../shared" }],
   "exclude": ["__fixtures__", "__test__", "coverage", "dist", "node_modules"],
   "include": ["src"]
 }

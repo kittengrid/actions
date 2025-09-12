@@ -1,5 +1,5 @@
 # Dependency directory
-preview/node_modules
+node_modules
 
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs
@@ -100,3 +100,10 @@ __tests__/runner/*
 # IDE files
 .idea
 *.code-workspace
+
+.turbo
+
+.rollup.cache
+
+# We do not need dist in shared module
+shared/dist

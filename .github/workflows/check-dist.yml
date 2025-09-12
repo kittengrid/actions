@@ -49,10 +49,12 @@ jobs:
 
       - name: Install Dependencies (${{ matrix.action }})
         id: install
+        working-directory: ./
         run: npm ci
 
       - name: Build dist/ Directory
         id: build
+        working-directory: ./
         run: npm run bundle
 
       # This will fail the workflow if the `dist/` directory is different than

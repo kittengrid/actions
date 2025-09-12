@@ -21,14 +21,7 @@ permissions:
 jobs:
   lint:
     name: Lint Codebase
-    strategy:
-      matrix:
-        action:
-          - preview
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./${{ matrix.action}}
 
     steps:
       - name: Checkout
@@ -38,19 +31,18 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Node.js (${{ matrix.action }})
+      - name: Setup Node.js
         id: setup-node
         uses: actions/setup-node@v4
         with:
-          node-version-file: ${{ matrix.action }}/.node-version
+          node-version-file: .node-version
           cache: npm
-          cache-dependency-path: ${{ matrix.action }}
 
-      - name: Install Dependencies (${{ matrix.action }})
+      - name: Install Dependencies
         id: install
         run: npm ci
 
-      - name: Lint Codebase (${{ matrix.action }})
+      - name: Lint Codebase
         id: super-linter
         uses: super-linter/super-linter/slim@ffde3b2b33b745cb612d787f669ef9442b1339a6
         env:
@@ -63,4 +55,3 @@ jobs:
           VALIDATE_JSCPD: false
           VALIDATE_TYPESCRIPT_ES: false
           VALIDATE_JSON: false
-          DEFAULT_WORKSPACE: /home/runner/work/actions/actions/${{ matrix.action }}

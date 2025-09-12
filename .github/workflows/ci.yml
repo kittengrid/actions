@@ -42,9 +42,10 @@ jobs:
         id: install
         run: npm ci
 
-      - name: Check Format (${{ matrix.action }})
-        id: npm-format-check
-        run: npm run format:check
+      - name: Bundle Shared (${{ matrix.action }})
+        id: npm-bundle-shared
+        working-directory: ./shared
+        run: npm run bundle
 
       - name: Lint (${{ matrix.action }})
         id: npm-lint
@@ -53,6 +54,32 @@ jobs:
       - name: Test (${{ matrix.action }})
         id: npm-ci-test
         run: npm run ci-test
+
+  format:
+    runs-on: ubuntu-latest
+    name: Format check
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        id: setup-node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+
+      - name: Install Dependencies
+        id: install
+        run: npm ci
+
+      - name: Check Format
+        id: npm-format-check
+        run: npm run format:check
 
   test-action:
     name: GitHub Actions Test (Preview)
