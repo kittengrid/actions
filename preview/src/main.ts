@@ -1,45 +1,13 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import * as tmp from 'tmp-promise'
 
-import { downloadAgent, showContextInfo } from './utils.js'
-
-async function populateEnv(ctx: typeof github.context): Promise<void> {
-  const event_number = ctx.payload.pull_request?.number
-  if (!event_number) {
-    core.setFailed('This action can only be run on pull_request events.')
-    return
-  }
-
-  core.exportVariable('KITTENGRID_VCS_PROVIDER', 'github')
-  core.exportVariable('KITTENGRID_PROJECT_VCS_ID', ctx.repo.repo)
-  core.exportVariable('KITTENGRID_PULL_REQUEST_VCS_ID', event_number)
-  core.exportVariable('KITTENGRID_BIND_ADDRESS', '0.0.0.0')
-  core.exportVariable(
-    'KITTENGRID_WORKFLOW_RUN_ID',
-    process.env['GITHUB_RUN_ID'] || ''
-  )
-  core.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha)
-
-  // env vars from action inputs
-  core.exportVariable(
-    'KITTENGRID_LOG_LEVEL',
-    core.getInput('log-level') || 'info'
-  )
-  core.exportVariable(
-    'KITTENGRID_API_KEY',
-    core.getInput('api-key', { required: true })
-  )
-  core.exportVariable(
-    'KITTENGRID_SHOW_SERVICES_OUTPUT',
-    core.getInput('show-services-output') || 'false'
-  )
-}
+import { validateDryRunInput, startAgent } from '@kittengrid-actions/shared'
 
 async function setupConfig(): Promise<string | void> {
   const config = core.getInput('config')
+
   if (config !== null && config.trim() !== '') {
     const tempFile = await tmp.file({ postfix: '.yml' })
     fs.writeFileSync(tempFile.path, config)
@@ -57,18 +25,7 @@ async function setupConfig(): Promise<string | void> {
 export async function run(): Promise<void> {
   try {
     const ctx = github.context
-
-    core.info('Kittengrid Preview Action is starting...')
-    await showContextInfo()
-
-    core.startGroup('Downloading and extracting Kittengrid agent...')
-    const agentPath = await downloadAgent()
-    core.info(`Kittengrid agent downloaded to: ${agentPath}`)
-    core.info('Kittengrid agent extraction complete.')
-    core.endGroup()
-
-    core.startGroup('Starting Kittengrid Agent')
-    await populateEnv(ctx)
+    const dryRun = await validateDryRunInput(core.getInput('dry-run'))
 
     const configFile = await setupConfig()
 
@@ -77,31 +34,21 @@ export async function run(): Promise<void> {
       args = ['--config', configFile]
     }
 
-    // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
-    const dryRunInput = core.getInput('dry-run').toLowerCase()
-    if (
-      dryRunInput !== 'true' &&
-      dryRunInput !== 'false' &&
-      dryRunInput !== ''
-    ) {
-      core.setFailed(
-        `Invalid value for dry-run input: ${core.getInput(
-          'dry-run'
-        )}. It must be either 'true' or 'false'.`
-      )
-      return
+    // If the actor contains bot
+    if (ctx.actor.toLowerCase().includes('bot')) {
+      core.info(ctx.actor)
+      args.push('--start-services')
+      args.push('true')
     }
 
-    if (dryRunInput === 'true') {
-      core.info('Dry run mode enabled, not executing the agent')
-      core.info('I would have run:')
-      core.info(`${agentPath} ${args.join(' ')}`)
-      return
-    }
+    // We start terminal by default
+    args.push('--start-terminal')
+    args.push('true')
 
-    await exec.exec(agentPath, args)
+    startAgent(ctx, args, dryRun)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
+    else core.setFailed(String(error))
   }
 }

@@ -7,14 +7,32 @@
  * 3. Error handling works properly
  */
 
-import { describe, expect, beforeEach, afterEach, it } from '@jest/globals'
-import { downloadAgent, downloadAndExtract } from '../src/utils.js'
+import {
+  jest,
+  describe,
+  expect,
+  beforeEach,
+  afterEach,
+  it
+} from '@jest/globals'
+
 import { promises as fs } from 'fs'
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import * as path from 'path'
 import * as os from 'os'
 import { platform } from '@actions/core'
+
+// Mocked module
+import * as core from '../__fixtures__/core.ts'
+import * as github from '../__fixtures__/github.ts'
+
+// Mocks should be declared before the module being tested is imported.
+jest.unstable_mockModule('@actions/core', () => core)
+jest.unstable_mockModule('@actions/github', () => core)
+
+const { downloadAgent, downloadAndExtract, showContextInfo, populateEnv } =
+  await import('../src/utils')
 
 const execAsync = promisify(exec)
 
@@ -27,6 +45,7 @@ describe('DownloadAgent Integration Tests', () => {
   })
 
   afterEach(async () => {
+    jest.resetAllMocks()
     // Clean up temporary directory
     if (tempDir) {
       try {
@@ -37,7 +56,75 @@ describe('DownloadAgent Integration Tests', () => {
     }
   })
 
+  describe('ShowContextInfo', () => {
+    it('should log platform and architecture info', async () => {
+      await showContextInfo()
+      expect(core.startGroup).toHaveBeenCalled()
+    })
+  })
+
+  describe('populateEnv', () => {
+    it('should exit if the event is not a pull request', async () => {
+      const context = github.context
+      const oldPayload = context.payload
+
+      context.payload = {}
+
+      await populateEnv(context)
+      expect(core.exportVariable).not.toHaveBeenCalledWith(
+        'KITTENGRID_EVENT_NUMBER',
+        expect.anything()
+      )
+      context.payload = oldPayload
+    })
+
+    it('should set KITTENGRID_API_KEY based on the input passed', async () => {
+      core.getInput.mockImplementation((name: string) => {
+        if (name === 'api-key') return 'github-token'
+        return 'undefined'
+      })
+
+      const context = github.context
+
+      await populateEnv(context)
+      expect(core.exportVariable).toHaveBeenCalledWith(
+        'KITTENGRID_API_KEY',
+        'github-token'
+      )
+    })
+  })
+
   describe('downloadAgent', () => {
+    it('throws error on unsupported arch', async () => {
+      const originalArch = Object.getOwnPropertyDescriptor(
+        core.platform,
+        'arch'
+      )
+      Object.defineProperty(core.platform, 'arch', { value: 'unsupported' })
+
+      await expect(downloadAgent()).rejects.toThrow(
+        'Unsupported architecture: unsupported. Only amd64 and arm64 are supported.'
+      )
+      Object.defineProperty(core.platform, 'arch', {
+        value: originalArch?.value
+      })
+    })
+
+    it('throws error on unsupported OS', async () => {
+      const originalPlatform = Object.getOwnPropertyDescriptor(
+        core.platform,
+        'platform'
+      )
+      Object.defineProperty(core.platform, 'platform', { value: 'win32' })
+
+      await expect(downloadAgent()).rejects.toThrow(
+        'Unsupported OS: win32. Only linux is currently supported.'
+      )
+      Object.defineProperty(core.platform, 'platform', {
+        value: originalPlatform?.value
+      })
+    })
+
     it('downloads the agent for current platform and verifies it is executable', async () => {
       // Skip if not on Linux (as per utils.ts limitation)
       if (platform.platform !== 'linux') {
@@ -82,34 +169,6 @@ describe('DownloadAgent Integration Tests', () => {
       // Clean up the downloaded file
       await fs.unlink(agentPath)
     }, 30000) // 30 second timeout for download
-
-    it('throws error for unsupported architecture', async () => {
-      // Mock platform.arch to simulate unsupported architecture
-      const originalArch = platform.arch
-      Object.defineProperty(platform, 'arch', { value: 'unsupported' })
-
-      try {
-        await expect(downloadAgent()).rejects.toThrow(
-          'Unsupported architecture'
-        )
-      } finally {
-        // Restore original architecture
-        Object.defineProperty(platform, 'arch', { value: originalArch })
-      }
-    })
-
-    it('throws error for unsupported OS', async () => {
-      // Mock platform.platform to simulate unsupported OS
-      const originalPlatform = platform.platform
-      Object.defineProperty(platform, 'platform', { value: 'win32' })
-
-      try {
-        await expect(downloadAgent()).rejects.toThrow('Unsupported OS')
-      } finally {
-        // Restore original platform
-        Object.defineProperty(platform, 'platform', { value: originalPlatform })
-      }
-    })
   })
 
   describe('downloadAndExtract', () => {

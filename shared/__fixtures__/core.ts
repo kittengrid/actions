@@ -5,9 +5,13 @@ export const debug = jest.fn<typeof core.debug>()
 export const error = jest.fn<typeof core.error>()
 export const info = jest.fn<typeof core.info>()
 export const getInput = jest.fn<typeof core.getInput>()
-export const exportVariable = jest.fn<typeof core.exportVariable>()
 export const setOutput = jest.fn<typeof core.setOutput>()
 export const setFailed = jest.fn<typeof core.setFailed>()
 export const startGroup = jest.fn<typeof core.startGroup>()
+export const exportVariable = jest.fn<typeof core.exportVariable>()
 export const endGroup = jest.fn<typeof core.endGroup>()
 export const warning = jest.fn<typeof core.warning>()
+export const platform = {
+  arch: 'x64',
+  platform: 'linux'
+} as typeof core.platform
