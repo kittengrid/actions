@@ -18,6 +18,7 @@ jobs:
       matrix:
         action:
           - preview
+          - terminal
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -108,3 +109,19 @@ jobs:
                   - -m
                   - http.server
                   - 10000
+  test-terminal:
+    name: GitHub Actions Test (Terminal)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Test Local Action (Terminal)
+        id: test-action
+        uses: ./terminal
+        with:
+          api-key: SOMETHING
+          dry-run: true
