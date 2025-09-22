@@ -26,6 +26,7 @@ jobs:
       matrix:
         action:
           - preview
+          - terminal
     name: Check dist/
     runs-on: ubuntu-latest
     defaults:
