@@ -66494,7 +66494,7 @@ async function run() {
             args = ['--config', configFile];
         }
         // If the actor contains bot
-        if (ctx.actor.toLowerCase().includes('bot')) {
+        if (!ctx.actor.toLowerCase().includes('bot')) {
             coreExports$1.info(ctx.actor);
             args.push('--start-services');
             args.push('true');
