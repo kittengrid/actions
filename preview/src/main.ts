@@ -39,11 +39,12 @@ export async function run(): Promise<void> {
       core.info(ctx.actor)
       args.push('--start-services')
       args.push('true')
-    }
 
-    // We start terminal by default
-    args.push('--start-terminal')
-    args.push('true')
+      // We start terminal by default
+      // when we start the services
+      args.push('--start-terminal')
+      args.push('true')
+    }
 
     startAgent(ctx, args, dryRun)
   } catch (error) {
