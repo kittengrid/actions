@@ -35,7 +35,7 @@ export async function run(): Promise<void> {
     }
 
     // If the actor contains bot
-    if (ctx.actor.toLowerCase().includes('bot')) {
+    if (!ctx.actor.toLowerCase().includes('bot')) {
       core.info(ctx.actor)
       args.push('--start-services')
       args.push('true')
