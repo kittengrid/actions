@@ -85,6 +85,8 @@ jobs:
   test-action:
     name: GitHub Actions Test (Preview)
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request'
     steps:
       - name: Checkout
         id: checkout
@@ -112,6 +114,8 @@ jobs:
   test-terminal:
     name: GitHub Actions Test (Terminal)
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request'
     steps:
       - name: Checkout
         id: checkout
