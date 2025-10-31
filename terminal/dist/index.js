@@ -28,7 +28,7 @@ import * as realZlib__default from 'zlib';
 import realZlib__default__default from 'zlib';
 import require$$6 from 'string_decoder';
 import require$$0$8 from 'diagnostics_channel';
-import require$$2$3 from 'child_process';
+import require$$2$3, { spawn } from 'child_process';
 import require$$6$1 from 'timers';
 import { StringDecoder } from 'node:string_decoder';
 import path$1, { win32, posix, basename as basename$2, join } from 'node:path';
@@ -65504,12 +65504,20 @@ async function startAgent(ctx, args, dryRun, background) {
     }
     await execExports.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars']);
     await execExports.exec('bash', ['-c', 'env | grep PATH > /tmp/vars']);
-    await execExports.exec('sudo', [
-        '-E',
-        'bash',
-        '-c',
-        `source /tmp/vars && ${'nohup' } ${agentPath} ${args.join(' ')} ${'& disown' }`
-    ]);
+    {
+        coreExports.info('Starting Kittengrid agent in the background...');
+        const child = spawn('sudo', [
+            '-E',
+            'bash',
+            '-c',
+            `source /tmp/vars && ${agentPath} ${args.join(' ')}`
+        ], {
+            detached: true,
+            stdio: 'inherit' // <-- this is the key part
+        });
+        // let it run on its own
+        child.unref();
+    }
 }
 /**
  * Validates the dry-run input string and converts it to a boolean.

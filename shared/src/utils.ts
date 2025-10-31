@@ -2,7 +2,7 @@ import { HttpClient } from '@actions/http-client'
 import * as github from '@actions/github'
 import { promises as fs } from 'fs'
 import * as core from '@actions/core'
-import { spawn } from 'child_process';
+import { spawn } from 'child_process'
 import { basename } from 'path'
 import * as path from 'path'
 import * as os from 'os'
@@ -194,10 +194,10 @@ export async function startAgent(
         detached: true,
         stdio: 'inherit' // <-- this is the key part
       }
-    );
+    )
 
     // let it run on its own
-    child.unref();
+    child.unref()
   } else {
     await exec.exec('sudo', [
       '-E',
@@ -206,8 +206,6 @@ export async function startAgent(
       `source /tmp/vars && ${agentPath} ${args.join(' ')}`
     ])
   }
-
-
 }
 
 /**
