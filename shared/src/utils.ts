@@ -2,6 +2,7 @@ import { HttpClient } from '@actions/http-client'
 import * as github from '@actions/github'
 import { promises as fs } from 'fs'
 import * as core from '@actions/core'
+import { spawn } from 'child_process';
 import { basename } from 'path'
 import * as path from 'path'
 import * as os from 'os'
@@ -179,12 +180,34 @@ export async function startAgent(
   }
   await exec.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars'])
   await exec.exec('bash', ['-c', 'env | grep PATH > /tmp/vars'])
-  await exec.exec('sudo', [
-    '-E',
-    'bash',
-    '-c',
-    `source /tmp/vars && ${background ? 'nohup' : ''} ${agentPath} ${args.join(' ')} ${background ? '& disown' : ''}`
-  ])
+  if (background) {
+    core.info('Starting Kittengrid agent in the background...')
+    const child = spawn(
+      'sudo',
+      [
+        '-E',
+        'bash',
+        '-c',
+        `source /tmp/vars && ${agentPath} ${args.join(' ')}`
+      ],
+      {
+        detached: true,
+        stdio: 'inherit' // <-- this is the key part
+      }
+    );
+
+    // let it run on its own
+    child.unref();
+  } else {
+    await exec.exec('sudo', [
+      '-E',
+      'bash',
+      '-c',
+      `source /tmp/vars && ${agentPath} ${args.join(' ')}`
+    ])
+  }
+
+
 }
 
 /**
