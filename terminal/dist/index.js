@@ -65513,6 +65513,7 @@ async function startAgent(ctx, args, dryRun, background) {
             `source /tmp/vars && ${agentPath} ${args.join(' ')}`
         ], {
             detached: true,
+            cwd: '/',
             stdio: 'inherit' // <-- this is the key part
         });
         // let it run on its own
