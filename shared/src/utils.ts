@@ -192,6 +192,7 @@ export async function startAgent(
       ],
       {
         detached: true,
+        cwd: '/',
         stdio: 'inherit' // <-- this is the key part
       }
     )
