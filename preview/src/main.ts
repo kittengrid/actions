@@ -46,7 +46,7 @@ export async function run(): Promise<void> {
       args.push('true')
     }
 
-    startAgent(ctx, args, dryRun)
+    startAgent(ctx, args, dryRun, false)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)

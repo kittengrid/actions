@@ -65395,39 +65395,35 @@ const AGENT_VERSION = '0.0.11';
  * @returns Promise<string> - Resolves with the extracted file path
  */
 async function downloadAndExtract(url, outputDir = '.') {
-  const client = new libExports.HttpClient('kittengrid-action');
-  const response = await client.get(url);
-  if (response.message.statusCode !== 200) {
-    // Properly close the response stream to prevent hanging handles
-    response.message.destroy();
-    throw new Error(
-      `Failed to fetch ${url}: ${response.message.statusCode} ${response.message.statusMessage}`
-    )
-  }
-  // Extract directly from the response stream
-  return new Promise((resolve, reject) => {
-    let extractedFilePath = '';
-    if (!response.message || !response.message.readable) {
-      response.message?.destroy();
-      reject(new Error(`No response body received from ${url}`));
-      return
-    }
-    response.message
-      .pipe(
-        extract({
-          cwd: outputDir, // where to extract
-          strict: true,
-          onentry: (entry) => {
-            extractedFilePath = `${outputDir}/${basename$3(entry.path)}`;
-          }
-        })
-      )
-      .on('error', (err) => {
+    const client = new libExports.HttpClient('kittengrid-action');
+    const response = await client.get(url);
+    if (response.message.statusCode !== 200) {
+        // Properly close the response stream to prevent hanging handles
         response.message.destroy();
-        reject(err);
-      })
-      .on('close', () => resolve(extractedFilePath));
-  })
+        throw new Error(`Failed to fetch ${url}: ${response.message.statusCode} ${response.message.statusMessage}`);
+    }
+    // Extract directly from the response stream
+    return new Promise((resolve, reject) => {
+        let extractedFilePath = '';
+        if (!response.message || !response.message.readable) {
+            response.message?.destroy();
+            reject(new Error(`No response body received from ${url}`));
+            return;
+        }
+        response.message
+            .pipe(extract({
+            cwd: outputDir, // where to extract
+            strict: true,
+            onentry: (entry) => {
+                extractedFilePath = `${outputDir}/${basename$3(entry.path)}`;
+            }
+        }))
+            .on('error', (err) => {
+            response.message.destroy();
+            reject(err);
+        })
+            .on('close', () => resolve(extractedFilePath));
+    });
 }
 /**
  * Downloads the Kittengrid agent for a specific architecture, OS, and version.
@@ -65439,66 +65435,47 @@ async function downloadAndExtract(url, outputDir = '.') {
  * @returns Promise<string> - Resolves with the path to the downloaded agent
  **/
 async function downloadAgentInternal(arch, os, version, outputDir) {
-  const url = `https://github.com/kittengrid/agent/releases/download/v${version}/kittengrid-agent-${os}-${arch}.tar.gz`;
-  return downloadAndExtract(url, outputDir)
+    const url = `https://github.com/kittengrid/agent/releases/download/v${version}/kittengrid-agent-${os}-${arch}.tar.gz`;
+    return downloadAndExtract(url, outputDir);
 }
 async function downloadAgent() {
-  const arch = coreExports.platform.arch === 'x64' ? 'amd64' : coreExports.platform.arch;
-  if (arch !== 'amd64' && arch !== 'arm64') {
-    throw new Error(
-      `Unsupported architecture: ${arch}. Only amd64 and arm64 are supported.`
-    )
-  }
-  const current_os = coreExports.platform.platform;
-  if (current_os !== 'linux') {
-    throw new Error(
-      `Unsupported OS: ${current_os}. Only linux is currently supported.`
-    )
-  }
-  const tempDir = await promises.mkdtemp(path__default.join(require$$0__default.tmpdir(), 'download-agent-'));
-  return downloadAgentInternal(arch, current_os, AGENT_VERSION, tempDir)
+    const arch = coreExports.platform.arch === 'x64' ? 'amd64' : coreExports.platform.arch;
+    if (arch !== 'amd64' && arch !== 'arm64') {
+        throw new Error(`Unsupported architecture: ${arch}. Only amd64 and arm64 are supported.`);
+    }
+    const current_os = coreExports.platform.platform;
+    if (current_os !== 'linux') {
+        throw new Error(`Unsupported OS: ${current_os}. Only linux is currently supported.`);
+    }
+    const tempDir = await promises.mkdtemp(path__default.join(require$$0__default.tmpdir(), 'download-agent-'));
+    return downloadAgentInternal(arch, current_os, AGENT_VERSION, tempDir);
 }
 async function showContextInfo() {
-  coreExports.startGroup('Kittengrid Agent Info');
-  coreExports.info(`Action version: ${process.env['GITHUB_ACTIONS']}`);
-  coreExports.info(`Node version: ${process.version}`);
-  coreExports.info(`Agent version: ${AGENT_VERSION}`);
-  coreExports.info(`Architecture: ${coreExports.platform.arch}`);
-  coreExports.info(`Operating System: ${coreExports.platform.platform}`);
-  coreExports.endGroup();
+    coreExports.startGroup('Kittengrid Agent Info');
+    coreExports.info(`Action version: ${process.env['GITHUB_ACTIONS']}`);
+    coreExports.info(`Node version: ${process.version}`);
+    coreExports.info(`Agent version: ${AGENT_VERSION}`);
+    coreExports.info(`Architecture: ${coreExports.platform.arch}`);
+    coreExports.info(`Operating System: ${coreExports.platform.platform}`);
+    coreExports.endGroup();
 }
 async function populateEnv(ctx) {
-  const event_number = ctx.payload.pull_request?.number;
-  if (!event_number) {
-    coreExports.setFailed('This action can only be run on pull_request events.');
-    return
-  }
-  coreExports.exportVariable('KITTENGRID_VCS_PROVIDER', 'github');
-  coreExports.exportVariable(
-    'KITTENGRID_PROJECT_VCS_ID',
-    ctx.repo.owner + '/' + ctx.repo.repo
-  );
-  coreExports.exportVariable('KITTENGRID_PULL_REQUEST_VCS_ID', event_number);
-  coreExports.exportVariable('KITTENGRID_BIND_ADDRESS', '0.0.0.0');
-  coreExports.exportVariable('KITTENGRID_API_URL', 'https://app.kittengrid.com');
-  coreExports.exportVariable(
-    'KITTENGRID_WORKFLOW_RUN_ID',
-    process.env['GITHUB_RUN_ID'] || ''
-  );
-  coreExports.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha);
-  // env vars from action inputs
-  coreExports.exportVariable(
-    'KITTENGRID_LOG_LEVEL',
-    coreExports.getInput('log-level') || 'info'
-  );
-  coreExports.exportVariable(
-    'KITTENGRID_API_KEY',
-    coreExports.getInput('api-key', { required: true })
-  );
-  coreExports.exportVariable(
-    'KITTENGRID_SHOW_SERVICES_OUTPUT',
-    coreExports.getInput('show-services-output') || 'false'
-  );
+    const event_number = ctx.payload.pull_request?.number;
+    if (!event_number) {
+        coreExports.setFailed('This action can only be run on pull_request events.');
+        return;
+    }
+    coreExports.exportVariable('KITTENGRID_VCS_PROVIDER', 'github');
+    coreExports.exportVariable('KITTENGRID_PROJECT_VCS_ID', ctx.repo.owner + '/' + ctx.repo.repo);
+    coreExports.exportVariable('KITTENGRID_PULL_REQUEST_VCS_ID', event_number);
+    coreExports.exportVariable('KITTENGRID_BIND_ADDRESS', '0.0.0.0');
+    coreExports.exportVariable('KITTENGRID_API_URL', 'https://app.kittengrid.com');
+    coreExports.exportVariable('KITTENGRID_WORKFLOW_RUN_ID', process.env['GITHUB_RUN_ID'] || '');
+    coreExports.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha);
+    // env vars from action inputs
+    coreExports.exportVariable('KITTENGRID_LOG_LEVEL', coreExports.getInput('log-level') || 'info');
+    coreExports.exportVariable('KITTENGRID_API_KEY', coreExports.getInput('api-key', { required: true }));
+    coreExports.exportVariable('KITTENGRID_SHOW_SERVICES_OUTPUT', coreExports.getInput('show-services-output') || 'false');
 }
 /**
  * Starts the Kittengrid agent with the provided arguments.
@@ -65506,32 +65483,33 @@ async function populateEnv(ctx) {
  * @param ctx - The GitHub action context
  * @param args - Arguments to pass to the agent
  * @param dryRun - If true, the agent will not be executed, just logged
+ * @param background - If true, the agent will be started in the background
  * @returns Promise<void> - Resolves when the agent has started or in dry run mode
  **/
-async function startAgent(ctx, args, dryRun) {
-  coreExports.info('Kittengrid Preview Action is starting...');
-  await showContextInfo();
-  coreExports.startGroup('Downloading and extracting Kittengrid agent...');
-  const agentPath = await downloadAgent();
-  coreExports.info(`Kittengrid agent downloaded to: ${agentPath}`);
-  coreExports.info('Kittengrid agent extraction complete.');
-  coreExports.endGroup();
-  coreExports.startGroup('Starting Kittengrid Agent');
-  await populateEnv(ctx);
-  if (dryRun) {
-    coreExports.info('Dry run mode enabled, not executing the agent');
-    coreExports.info('I would have run:');
-    coreExports.info(`${agentPath} --start-terminal true`);
-    return
-  }
-  await execExports.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars']);
-  await execExports.exec('bash', ['-c', 'env | grep PATH > /tmp/vars']);
-  await execExports.exec('sudo', [
-    '-E',
-    'bash',
-    '-c',
-    `source /tmp/vars && ${agentPath} ${args.join(' ')}`
-  ]);
+async function startAgent(ctx, args, dryRun, background) {
+    coreExports.info('Kittengrid Preview Action is starting...');
+    await showContextInfo();
+    coreExports.startGroup('Downloading and extracting Kittengrid agent...');
+    const agentPath = await downloadAgent();
+    coreExports.info(`Kittengrid agent downloaded to: ${agentPath}`);
+    coreExports.info('Kittengrid agent extraction complete.');
+    coreExports.endGroup();
+    coreExports.startGroup('Starting Kittengrid Agent');
+    await populateEnv(ctx);
+    if (dryRun) {
+        coreExports.info('Dry run mode enabled, not executing the agent');
+        coreExports.info('I would have run:');
+        coreExports.info(`${agentPath} --start-terminal true`);
+        return;
+    }
+    await execExports.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars']);
+    await execExports.exec('bash', ['-c', 'env | grep PATH > /tmp/vars']);
+    await execExports.exec('sudo', [
+        '-E',
+        'bash',
+        '-c',
+        `source /tmp/vars && ${'nohup' } ${agentPath} ${args.join(' ')} ${'& disown' }`
+    ]);
 }
 /**
  * Validates the dry-run input string and converts it to a boolean.
@@ -65541,14 +65519,12 @@ async function startAgent(ctx, args, dryRun) {
  * @throws Error if the input is not 'true', 'false', or empty
  */
 async function validateDryRunInput(input) {
-  // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
-  const dryRunInput = input.toLowerCase();
-  if (dryRunInput !== 'true' && dryRunInput !== 'false' && dryRunInput !== '') {
-    throw new Error(
-      `Invalid value for dry-run input: ${coreExports.getInput('dry-run')}. It must be either 'true' or 'false'.`
-    )
-  }
-  return dryRunInput === 'true'
+    // Sanity check for dry-run variable setting, it has to be 'true' or 'false'
+    const dryRunInput = input.toLowerCase();
+    if (dryRunInput !== 'true' && dryRunInput !== 'false' && dryRunInput !== '') {
+        throw new Error(`Invalid value for dry-run input: ${coreExports.getInput('dry-run')}. It must be either 'true' or 'false'.`);
+    }
+    return dryRunInput === 'true';
 }
 
 /**
@@ -65560,7 +65536,7 @@ async function run() {
     try {
         const ctx = githubExports.context;
         const dryRun = await validateDryRunInput(coreExports$1.getInput('dry-run'));
-        startAgent(ctx, ['--start-terminal', 'true'], dryRun);
+        startAgent(ctx, ['--start-terminal', 'true'], dryRun, true);
     }
     catch (error) {
         // Fail the workflow run if an error occurs

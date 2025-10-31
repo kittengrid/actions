@@ -151,12 +151,14 @@ export async function populateEnv(ctx: typeof github.context): Promise<void> {
  * @param ctx - The GitHub action context
  * @param args - Arguments to pass to the agent
  * @param dryRun - If true, the agent will not be executed, just logged
+ * @param background - If true, the agent will be started in the background
  * @returns Promise<void> - Resolves when the agent has started or in dry run mode
  **/
 export async function startAgent(
   ctx: typeof github.context,
   args: string[],
-  dryRun: boolean
+  dryRun: boolean,
+  background: boolean
 ): Promise<void> {
   core.info('Kittengrid Preview Action is starting...')
   await showContextInfo()
@@ -181,7 +183,7 @@ export async function startAgent(
     '-E',
     'bash',
     '-c',
-    `source /tmp/vars && ${agentPath} ${args.join(' ')}`
+    `source /tmp/vars && ${background ? 'nohup' : ''} ${agentPath} ${args.join(' ')} ${background ? '& disown' : ''}`
   ])
 }
 
