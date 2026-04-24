@@ -19,7 +19,7 @@ jobs:
         action:
           - preview
           - terminal
-    runs-on: ubuntu-latest
+    runs-on: kittengrid
     defaults:
       run:
         working-directory: ./${{ matrix.action}}
@@ -57,7 +57,7 @@ jobs:
         run: npm run ci-test
 
   format:
-    runs-on: ubuntu-latest
+    runs-on: kittengrid
     name: Format check
     steps:
       - name: Checkout
@@ -84,7 +84,7 @@ jobs:
 
   test-action:
     name: GitHub Actions Test (Preview)
-    runs-on: ubuntu-latest
+    runs-on: kittengrid
     if: |
       github.event_name == 'pull_request'
     steps:

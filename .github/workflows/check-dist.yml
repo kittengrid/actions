@@ -28,7 +28,7 @@ jobs:
           - preview
           - terminal
     name: Check dist/
-    runs-on: ubuntu-latest
+    runs-on: kittengrid
     defaults:
       run:
         working-directory: ./${{ matrix.action}}
