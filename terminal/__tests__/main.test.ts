@@ -34,6 +34,7 @@ describe('main.ts', () => {
     expect(shared.startAgent).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
+      true,
       true
     )
   })
@@ -43,7 +44,8 @@ describe('main.ts', () => {
     expect(shared.startAgent).toHaveBeenCalledWith(
       expect.anything(),
       ['--start-terminal', 'true'],
-      undefined
+      undefined,
+      true
     )
   })
 

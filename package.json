@@ -18,5 +18,16 @@
     "prettier": "^3.6.2",
     "turbo": "^2.5.6"
   },
-  "packageManager": "npm@11.5.1"
+  "packageManager": "npm@11.5.1",
+  "overrides": {
+    "brace-expansion": ">=1.1.13",
+    "js-yaml": ">=3.14.2",
+    "minimatch": ">=3.1.3",
+    "picomatch": ">=2.3.2",
+    "tar": ">=7.5.11",
+    "undici": ">=6.24.0",
+    "@octokit/plugin-paginate-rest": ">=9.2.2",
+    "@octokit/request": ">=8.4.1",
+    "@octokit/request-error": ">=5.1.1"
+  }
 }

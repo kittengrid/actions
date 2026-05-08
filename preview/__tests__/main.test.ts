@@ -50,7 +50,8 @@ describe('main.ts', () => {
     expect(shared.startAgent).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
-      true
+      true,
+      false
     )
   })
 
@@ -80,19 +81,21 @@ describe('main.ts', () => {
     await run()
     expect(shared.startAgent).toHaveBeenCalledWith(
       expect.anything(),
-      ['--start-terminal', 'true'],
-      undefined
+      expect.arrayContaining(['--start-terminal', 'true']),
+      undefined,
+      false
     )
   })
 
-  it('starts services when the runner is a bot', async () => {
-    github.context.actor = 'some-bot'
+  it('starts services when the runner is not a bot', async () => {
+    github.context.actor = 'example-actor'
 
     await run()
     expect(shared.startAgent).toHaveBeenCalledWith(
       expect.anything(),
       expect.arrayContaining(['--start-services', 'true']),
-      undefined
+      undefined,
+      false
     )
   })
 })
