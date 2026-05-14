@@ -175,6 +175,9 @@ export async function startAgent(
 
   core.startGroup('Starting Kittengrid Agent')
   await populateEnv(ctx)
+  core.info('Environment variables set for Kittengrid agent:')
+  core.info(`KITTENGRID_API_URL=${process.env['KITTENGRID_API_URL']}`)
+
   if (dryRun) {
     core.info('Dry run mode enabled, not executing the agent')
     core.info('I would have run:')
