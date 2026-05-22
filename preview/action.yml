@@ -26,6 +26,12 @@ inputs:
   dry-run:
     description: "Don't run the agent itself."
     default: false
+  pull-request-number:
+    description: Pull Request number  to be used through direct dispatch.
+    default: null
+  pull-request-head-sha:
+    description: Pull Request head SHA  to be used through direct dispatch.
+    default: null
 
 runs:
   using: node24

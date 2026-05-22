@@ -111,9 +111,9 @@ export async function showContextInfo(): Promise<void> {
 }
 
 export async function populateEnv(ctx: typeof github.context): Promise<void> {
-  const event_number = ctx.payload.pull_request?.number
+  const event_number = ctx.payload.pull_request?.number || core.getInput('pull-request-number');
   if (!event_number) {
-    core.setFailed('This action can only be run on pull_request events.')
+    core.setFailed('Could not determine Pull Request number. Did you set up pull-request-number input?')
     return
   }
 
@@ -132,7 +132,7 @@ export async function populateEnv(ctx: typeof github.context): Promise<void> {
     'KITTENGRID_WORKFLOW_RUN_ID',
     process.env['GITHUB_RUN_ID'] || ''
   )
-  core.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha)
+  core.exportVariable('KITTENGRID_LAST_COMMIT_SHA', core.getInput('pull-request-sha') || ctx.sha)
 
   // env vars from action inputs
   core.exportVariable(
