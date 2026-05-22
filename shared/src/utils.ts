@@ -135,10 +135,7 @@ export async function populateEnv(ctx: typeof github.context): Promise<void> {
     'KITTENGRID_WORKFLOW_RUN_ID',
     process.env['GITHUB_RUN_ID'] || ''
   )
-  core.exportVariable(
-    'KITTENGRID_LAST_COMMIT_SHA',
-    ctx.sha
-  )
+  core.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha)
 
   // env vars from action inputs
   core.exportVariable(
