@@ -36,7 +36,7 @@ export async function run(): Promise<void> {
 
     // Only start services when the workflow is triggered manually, to avoid
     // starting services during pull request or push events
-    if (ctx.eventName === "workflow_dispatch") {
+    if (ctx.eventName === 'workflow_dispatch') {
       args.push('--start-services')
       args.push('true')
 
@@ -45,7 +45,7 @@ export async function run(): Promise<void> {
     }
 
     await startAgent(ctx, args, dryRun, false)
-    process.exit(0);
+    process.exit(0)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
