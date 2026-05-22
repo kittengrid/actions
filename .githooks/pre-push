@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+if [ -e /dev/tty ]; then
+  read -p "Do you want to run npx turbo bundle? (Y/n) " -n 1 -r </dev/tty
+  echo
+else
+  # Non-interactive context (CI, GUI client): skip by default
+  REPLY=n
+fi
+
+if [[ $REPLY =~ ^[Yy]$ || -z $REPLY ]]; then
+  npx turbo bundle
+  git commit -am "Update bundle"
+  git push --no-verify
+  exit 1   # stop the original push; the inner push already sent HEAD + bundle
+else
+  echo "Skipping npx turbo bundle"
+fi
