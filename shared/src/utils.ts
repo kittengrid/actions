@@ -137,7 +137,7 @@ export async function populateEnv(ctx: typeof github.context): Promise<void> {
   )
   core.exportVariable(
     'KITTENGRID_LAST_COMMIT_SHA',
-    core.getInput('pull-request-sha') || ctx.sha
+    ctx.sha
   )
 
   // env vars from action inputs
