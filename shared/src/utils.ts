@@ -129,7 +129,7 @@ export async function populateEnv(ctx: typeof github.context): Promise<void> {
   core.exportVariable('KITTENGRID_BIND_ADDRESS', '0.0.0.0')
   core.exportVariable(
     'KITTENGRID_API_URL',
-    process.env['KITTENGRID_API_URL'] || 'https://api.kittengrid.com'
+    process.env['KITTENGRID_API_URL'] || 'https://app.kittengrid.com'
   )
   core.exportVariable(
     'KITTENGRID_WORKFLOW_RUN_ID',
