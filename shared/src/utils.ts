@@ -8,7 +8,7 @@ import * as path from 'path'
 import * as os from 'os'
 import * as tar from 'tar'
 import * as exec from '@actions/exec'
-export const AGENT_VERSION = '0.0.11'
+export const AGENT_VERSION = '0.0.14'
 
 /**
  * Downloads a .tar.gz from a given URL and extracts its single file.
