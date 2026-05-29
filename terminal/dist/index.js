@@ -109019,9 +109019,9 @@ async function showContextInfo() {
     coreExports.endGroup();
 }
 async function populateEnv(ctx) {
-    const event_number = ctx.payload.pull_request?.number;
+    const event_number = ctx.payload.pull_request?.number || coreExports.getInput('pull-request-number');
     if (!event_number) {
-        coreExports.setFailed('This action can only be run on pull_request events.');
+        coreExports.setFailed('Could not determine Pull Request number. Did you set up pull-request-number input?');
         return;
     }
     coreExports.exportVariable('KITTENGRID_VCS_PROVIDER', 'github');

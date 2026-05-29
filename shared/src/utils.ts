@@ -111,9 +111,12 @@ export async function showContextInfo(): Promise<void> {
 }
 
 export async function populateEnv(ctx: typeof github.context): Promise<void> {
-  const event_number = ctx.payload.pull_request?.number
+  const event_number =
+    ctx.payload.pull_request?.number || core.getInput('pull-request-number')
   if (!event_number) {
-    core.setFailed('This action can only be run on pull_request events.')
+    core.setFailed(
+      'Could not determine Pull Request number. Did you set up pull-request-number input?'
+    )
     return
   }
 

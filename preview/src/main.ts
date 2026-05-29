@@ -34,19 +34,18 @@ export async function run(): Promise<void> {
       args = ['--config', configFile]
     }
 
-    // If the actor contains bot
-    if (!ctx.actor.toLowerCase().includes('bot')) {
-      core.info(ctx.actor)
+    // Only start services when the workflow is triggered manually, to avoid
+    // starting services during pull request or push events
+    if (ctx.eventName === 'workflow_dispatch') {
       args.push('--start-services')
       args.push('true')
 
-      // We start terminal by default
-      // when we start the services
       args.push('--start-terminal')
       args.push('true')
     }
 
-    startAgent(ctx, args, dryRun, false)
+    await startAgent(ctx, args, dryRun, false)
+    process.exit(0)
   } catch (error) {
     // Fail the workflow run if an error occurs
     if (error instanceof Error) core.setFailed(error.message)
