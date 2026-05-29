@@ -68893,6 +68893,29 @@ function requireTmp () {
 		}
 
 		/**
+		 * Check the prefix, postfix, and template options.
+		 *
+		 * Rejects non-string inputs so that a non-string `.includes('..')` cannot evade
+		 * the substring check (e.g. an Array whose `.includes('..')` is element-wise,
+		 * or a duck-typed object with a custom `.includes`), and so that the value is
+		 * not later coerced to a string with traversal sequences via `Array.prototype.join`
+		 * or `path.join`.
+		 *
+		 * @private
+		 */
+		function _assertPath(option, value) {
+		  if (typeof value !== 'string') {
+		    throw new Error(`${option} option must be a string, got "${typeof value}".`);
+		  }
+
+		  if (value.includes("..")) {
+		    throw new Error("Relative value not allowed");
+		  }
+
+		  return value;
+		}
+
+		/**
 		 * Asserts and sanitizes the basic options.
 		 *
 		 * @private
@@ -68906,13 +68929,19 @@ function requireTmp () {
 
 		    // must not fail on valid .<name> or ..<name> or similar such constructs
 		    const basename = path.basename(name);
-		    if (basename === '..' || basename === '.' || basename !== name)
+		    if (basename === '..' || basename === '.' || basename !== name) {
 		      throw new Error(`name option must not contain a path, found "${name}".`);
+		    }
 		  }
 
 		  /* istanbul ignore else */
-		  if (!_isUndefined(options.template) && !options.template.match(TEMPLATE_PATTERN)) {
-		    throw new Error(`Invalid template, found "${options.template}".`);
+		  if (!_isUndefined(options.template)) {
+		    if (typeof options.template !== 'string') {
+		      throw new Error(`template option must be a string, got "${typeof options.template}".`);
+		    }
+		    if (!options.template.match(TEMPLATE_PATTERN)) {
+		      throw new Error(`Invalid template, found "${options.template}".`);
+		    }
 		  }
 
 		  /* istanbul ignore else */
@@ -68928,8 +68957,9 @@ function requireTmp () {
 		  options.unsafeCleanup = !!options.unsafeCleanup;
 
 		  // for completeness' sake only, also keep (multiple) blanks if the user, purportedly sane, requests us to
-		  options.prefix = _isUndefined(options.prefix) ? '' : options.prefix;
-		  options.postfix = _isUndefined(options.postfix) ? '' : options.postfix;
+		  options.prefix = _isUndefined(options.prefix) ? '' : _assertPath('prefix', options.prefix);
+		  options.postfix = _isUndefined(options.postfix) ? '' : _assertPath('postfix', options.postfix);
+		  options.template = _isUndefined(options.template) ? undefined : _assertPath('template', options.template);
 		}
 
 		/**
@@ -68945,7 +68975,7 @@ function requireTmp () {
 
 		    const relativePath = path.relative(tmpDir, resolvedPath);
 
-		    if (!resolvedPath.startsWith(tmpDir)) {
+		    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
 		      return cb(new Error(`${option} option must be relative to "${tmpDir}", found "${relativePath}".`));
 		    }
 
@@ -68964,7 +68994,7 @@ function requireTmp () {
 		  const resolvedPath = _resolvePathSync(name, tmpDir);
 		  const relativePath = path.relative(tmpDir, resolvedPath);
 
-		  if (!resolvedPath.startsWith(tmpDir)) {
+		  if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
 		    throw new Error(`${option} option must be relative to "${tmpDir}", found "${relativePath}".`);
 		  }
 
