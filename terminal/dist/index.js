@@ -109028,7 +109028,7 @@ async function populateEnv(ctx) {
     coreExports.exportVariable('KITTENGRID_PROJECT_VCS_ID', ctx.repo.owner + '/' + ctx.repo.repo);
     coreExports.exportVariable('KITTENGRID_PULL_REQUEST_VCS_ID', event_number);
     coreExports.exportVariable('KITTENGRID_BIND_ADDRESS', '0.0.0.0');
-    coreExports.exportVariable('KITTENGRID_API_URL', process.env['KITTENGRID_API_URL'] || 'https://api.kittengrid.com');
+    coreExports.exportVariable('KITTENGRID_API_URL', process.env['KITTENGRID_API_URL'] || 'https://app.kittengrid.com');
     coreExports.exportVariable('KITTENGRID_WORKFLOW_RUN_ID', process.env['GITHUB_RUN_ID'] || '');
     coreExports.exportVariable('KITTENGRID_LAST_COMMIT_SHA', ctx.sha);
     // env vars from action inputs
