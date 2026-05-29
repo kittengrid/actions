@@ -108944,7 +108944,7 @@ var vr=Object.defineProperty;var Mr=(s,t)=>{for(var e in t)vr(s,e,{get:t[e],enum
 
 var execExports = requireExec();
 
-const AGENT_VERSION = '0.0.16';
+const AGENT_VERSION = '0.0.17';
 /**
  * Downloads a .tar.gz from a given URL and extracts its single file.
  * Saves the extracted file to the specified destination directory.
