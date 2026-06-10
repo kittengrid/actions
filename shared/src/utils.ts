@@ -122,7 +122,7 @@ export async function populateEnv(ctx: typeof github.context): Promise<void> {
 
   core.exportVariable('KITTENGRID_VCS_PROVIDER', 'github')
   core.exportVariable(
-    'KITTENGRID_PROJECT_VCS_ID',
+    'KITTENGRID_PROJECT_VCS_PATH',
     ctx.repo.owner + '/' + ctx.repo.repo
   )
   core.exportVariable('KITTENGRID_PULL_REQUEST_VCS_ID', event_number)
