@@ -8,7 +8,11 @@ import * as path from 'path'
 import * as os from 'os'
 import * as tar from 'tar'
 import * as exec from '@actions/exec'
-export const AGENT_VERSION = '0.0.17'
+export const AGENT_VERSION = 'v0.0.17'
+
+const getAgentVersion = () => {
+  return process.env['KITTENGRID_AGENT_VERSION'] || AGENT_VERSION
+}
 
 /**
  * Downloads a .tar.gz from a given URL and extracts its single file.
@@ -76,7 +80,7 @@ async function downloadAgentInternal(
   version: string,
   outputDir: string
 ): Promise<string> {
-  const url = `https://github.com/kittengrid/agent/releases/download/v${version}/kittengrid-agent-${os}-${arch}.tar.gz`
+  const url = `https://github.com/kittengrid/agent/releases/download/${version}/kittengrid-agent-${os}-${arch}.tar.gz`
   return downloadAndExtract(url, outputDir)
 }
 
@@ -97,14 +101,14 @@ export async function downloadAgent(): Promise<string> {
 
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'download-agent-'))
 
-  return downloadAgentInternal(arch, current_os, AGENT_VERSION, tempDir)
+  return downloadAgentInternal(arch, current_os, getAgentVersion(), tempDir)
 }
 
 export async function showContextInfo(): Promise<void> {
   core.startGroup('Kittengrid Agent Info')
   core.info(`Action version: ${process.env['GITHUB_ACTIONS']}`)
   core.info(`Node version: ${process.version}`)
-  core.info(`Agent version: ${AGENT_VERSION}`)
+  core.info(`Agent version: ${getAgentVersion()}`)
   core.info(`Architecture: ${core.platform.arch}`)
   core.info(`Operating System: ${core.platform.platform}`)
   core.endGroup()
