@@ -8,10 +8,11 @@ import * as path from 'path'
 import * as os from 'os'
 import * as tar from 'tar'
 import * as exec from '@actions/exec'
-export const AGENT_VERSION = 'v0.0.17'
+
+const DEFAULT_AGENT_VERSION = 'v0.0.18'
 
 const getAgentVersion = () => {
-  return process.env['KITTENGRID_AGENT_VERSION'] || AGENT_VERSION
+  return process.env['KITTENGRID_AGENT_VERSION'] || DEFAULT_AGENT_VERSION
 }
 
 /**
