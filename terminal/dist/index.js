@@ -108944,7 +108944,10 @@ var vr=Object.defineProperty;var Mr=(s,t)=>{for(var e in t)vr(s,e,{get:t[e],enum
 
 var execExports = requireExec();
 
-const AGENT_VERSION = '0.0.17';
+const DEFAULT_AGENT_VERSION = 'v0.0.18';
+const getAgentVersion = () => {
+    return process.env['KITTENGRID_AGENT_VERSION'] || DEFAULT_AGENT_VERSION;
+};
 /**
  * Downloads a .tar.gz from a given URL and extracts its single file.
  * Saves the extracted file to the specified destination directory.
@@ -108994,7 +108997,7 @@ async function downloadAndExtract(url, outputDir = '.') {
  * @returns Promise<string> - Resolves with the path to the downloaded agent
  **/
 async function downloadAgentInternal(arch, os, version, outputDir) {
-    const url = `https://github.com/kittengrid/agent/releases/download/v${version}/kittengrid-agent-${os}-${arch}.tar.gz`;
+    const url = `https://github.com/kittengrid/agent/releases/download/${version}/kittengrid-agent-${os}-${arch}.tar.gz`;
     return downloadAndExtract(url, outputDir);
 }
 async function downloadAgent() {
@@ -109007,13 +109010,13 @@ async function downloadAgent() {
         throw new Error(`Unsupported OS: ${current_os}. Only linux is currently supported.`);
     }
     const tempDir = await promises.mkdtemp(require$$1__default.join(require$$0__default.tmpdir(), 'download-agent-'));
-    return downloadAgentInternal(arch, current_os, AGENT_VERSION, tempDir);
+    return downloadAgentInternal(arch, current_os, getAgentVersion(), tempDir);
 }
 async function showContextInfo() {
     coreExports.startGroup('Kittengrid Agent Info');
     coreExports.info(`Action version: ${process.env['GITHUB_ACTIONS']}`);
     coreExports.info(`Node version: ${process.version}`);
-    coreExports.info(`Agent version: ${AGENT_VERSION}`);
+    coreExports.info(`Agent version: ${getAgentVersion()}`);
     coreExports.info(`Architecture: ${coreExports.platform.arch}`);
     coreExports.info(`Operating System: ${coreExports.platform.platform}`);
     coreExports.endGroup();
