@@ -109892,7 +109892,7 @@ var vr=Object.defineProperty;var Mr=(s,t)=>{for(var e in t)vr(s,e,{get:t[e],enum
 
 var execExports = requireExec();
 
-const DEFAULT_AGENT_VERSION = 'v0.0.18';
+const DEFAULT_AGENT_VERSION = 'canary';
 const getAgentVersion = () => {
     return process.env['KITTENGRID_AGENT_VERSION'] || DEFAULT_AGENT_VERSION;
 };

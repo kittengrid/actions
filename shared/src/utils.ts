@@ -9,7 +9,7 @@ import * as os from 'os'
 import * as tar from 'tar'
 import * as exec from '@actions/exec'
 
-const DEFAULT_AGENT_VERSION = 'v0.0.18'
+const DEFAULT_AGENT_VERSION = 'canary'
 
 const getAgentVersion = () => {
   return process.env['KITTENGRID_AGENT_VERSION'] || DEFAULT_AGENT_VERSION
