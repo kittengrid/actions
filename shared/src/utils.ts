@@ -192,34 +192,18 @@ export async function startAgent(
     core.info(`${agentPath} --start-terminal true`)
     return
   }
-  await exec.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars'])
-  await exec.exec('bash', ['-c', 'env | grep PATH > /tmp/vars'])
   if (background) {
     core.info('Starting Kittengrid agent in the background...')
-    const child = spawn(
-      'sudo',
-      [
-        '-E',
-        'bash',
-        '-c',
-        `source /tmp/vars && ${agentPath} ${args.join(' ')}`
-      ],
-      {
-        detached: true,
-        cwd: '/',
-        stdio: 'inherit' // <-- this is the key part
-      }
-    )
+    const child = spawn(agentPath, args, {
+      detached: true,
+      cwd: '/',
+      stdio: 'inherit'
+    })
 
-    // let it run on its own
+    // Let it run on its own.
     child.unref()
   } else {
-    await exec.exec('sudo', [
-      '-E',
-      'bash',
-      '-c',
-      `source /tmp/vars && ${agentPath} ${args.join(' ')}`
-    ])
+    await exec.exec(agentPath, args)
   }
 }
 

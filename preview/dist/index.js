@@ -110014,15 +110014,8 @@ async function startAgent(ctx, args, dryRun, background) {
         coreExports.info(`${agentPath} --start-terminal true`);
         return;
     }
-    await execExports.exec('bash', ['-c', 'env | grep KITTENGRID_ > /tmp/vars']);
-    await execExports.exec('bash', ['-c', 'env | grep PATH > /tmp/vars']);
     {
-        await execExports.exec('sudo', [
-            '-E',
-            'bash',
-            '-c',
-            `source /tmp/vars && ${agentPath} ${args.join(' ')}`
-        ]);
+        await execExports.exec(agentPath, args);
     }
 }
 /**
